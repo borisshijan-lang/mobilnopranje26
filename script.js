@@ -3,7 +3,10 @@
 // =====================
 function $(id){ return document.getElementById(id); }
 function pad2(n){ return String(n).padStart(2,"0"); }
-function monthTitle(dt){ return dt.toLocaleString("sr-RS",{month:"long",year:"numeric"}); }
+function monthTitle(dt){
+  // sr-Latn-RS = srpski latinica
+  return dt.toLocaleString("sr-Latn-RS",{month:"long",year:"numeric"});
+}
 function dateKey(y,m,d){ return `${y}-${pad2(m+1)}-${pad2(d)}`; }  // ISO key
 function niceDate(y,m,d){ return `${pad2(d)}/${pad2(m+1)}/${y}`; }
 function niceTime(min){
@@ -190,10 +193,13 @@ async function getBookingsForDay(key){
 async function renderSlots(){
   if(!elSlots) return;
 
-  elSlots.innerHTML = "";
-  btnSend.disabled = true;
+ elSlots.innerHTML = `<div class="muted">Učitavanje termina...</div>`;
+btnSend.disabled = true;
 
-  if(!selected){
+
+  if(!selected){ // reset container pre punjenja
+elSlots.innerHTML = "";
+
     elSlots.innerHTML = `<div class="muted">Izaberi datum da vidiš slobodne termine.</div>`;
     return;
   }
