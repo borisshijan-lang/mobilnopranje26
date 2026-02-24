@@ -1,2 +1,124 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobilno Pranje PRO</title>
 <link rel="stylesheet" href="style.css">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+</head>
+<body>
+
+<nav>
+<div onclick="window.scrollTo(0,0)" class="logo">Mobilno Pranje</div>
+<div class="nav-links">
+<a onclick="scrollToSection('about')">O nama</a>
+<a onclick="scrollToSection('services')">Usluge</a>
+<a onclick="scrollToSection('prices')">Cene</a>
+<a onclick="scrollToSection('gallery')">Galerija</a>
+<a onclick="scrollToSection('faq')">FAQ</a>
+<a onclick="openBooking()">Zakazivanje</a>
+<a onclick="openAdmin()">Admin</a>
+</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+<h1>Profesionalno mobilno pranje vozila</h1>
+<button onclick="openBooking()">Zakaži termin</button>
+</section>
+
+<!-- O NAMA -->
+<section id="about">
+<h2>O nama</h2>
+<p>Dolazimo na vašu adresu i pružamo profesionalnu uslugu detaljnog pranja vozila.</p>
+</section>
+
+<!-- USLUGE -->
+<section id="services">
+<h2>Usluge</h2>
+<div class="card"><h3>Osnovno</h3><p>Spoljašnje pranje + felne + sušenje</p><p>60 min</p></div>
+<div class="card"><h3>Standard</h3><p>Spolja + unutrašnje čišćenje + plastike + stakla</p><p>90 min</p></div>
+<div class="card"><h3>Premium</h3><p>Dubinsko čišćenje enterijera + kompletno spolja</p><p>120 min</p></div>
+</section>
+
+<!-- CENE -->
+<section id="prices">
+<h2>Cenovnik</h2>
+<div class="card"><h3>Osnovno</h3><p>20€ – Spoljašnje pranje, felne, sušenje</p></div>
+<div class="card"><h3>Standard</h3><p>35€ – Spolja + unutrašnje čišćenje enterijera</p></div>
+<div class="card"><h3>Premium</h3><p>60€ – Dubinsko čišćenje enterijera + kompletno spolja</p></div>
+</section>
+
+<!-- GALERIJA -->
+<section id="gallery">
+<h2>Galerija</h2>
+<div class="gallery">
+<img src="https://images.pexels.com/photos/3354648/pexels-photo-3354648.jpeg">
+<img src="https://images.pexels.com/photos/372810/pexels-photo-372810.jpeg">
+<img src="https://images.pexels.com/photos/6873089/pexels-photo-6873089.jpeg">
+</div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+<h2>FAQ</h2>
+<div class="faq-item">
+<h3 onclick="toggleFAQ(this)">Da li dolazite na adresu?</h3>
+<p>Da, dolazimo na vašu lokaciju.</p>
+</div>
+<div class="faq-item">
+<h3 onclick="toggleFAQ(this)">Koliko traje pranje?</h3>
+<p>U zavisnosti od paketa 60–120 minuta.</p>
+</div>
+</section>
+
+<!-- BOOKING MODAL -->
+<div id="bookingModal" class="modal hidden">
+<div class="modal-content">
+<span class="close" onclick="closeBooking()">X</span>
+
+<div class="calendar-header">
+<button onclick="changeMonth(-1)">◀</button>
+<h3 id="monthYear"></h3>
+<button onclick="changeMonth(1)">▶</button>
+</div>
+
+<div id="calendarGrid"></div>
+
+<select id="packageSelect">
+<option value="60">Osnovno (60min)</option>
+<option value="90">Standard (90min)</option>
+<option value="120">Premium (120min)</option>
+</select>
+
+<select id="timeSelect">
+<option>Izaberite datum prvo</option>
+</select>
+
+<button id="confirmBooking" disabled>Pošalji zahtev</button>
+</div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div id="adminModal" class="modal hidden">
+<div class="modal-content">
+<span class="close" onclick="closeAdmin()">X</span>
+<h2>Admin Panel</h2>
+<input type="email" id="adminEmail" placeholder="Email">
+<input type="password" id="adminPass" placeholder="Šifra">
+<button onclick="loginAdmin()">Login</button>
+<div id="adminContent" class="hidden">
+<h3>Rezervacije</h3>
+<div id="adminBookings"></div>
+</div>
+</div>
+</div>
+
 <script src="script.js"></script>
+</body>
+</html>
