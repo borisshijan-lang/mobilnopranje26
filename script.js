@@ -1,156 +1,354 @@
-// ---------------- FIREBASE ----------------
-var firebaseConfig = {
+// =====================
+// Firebase config (UBACI SVOJE + databaseURL)
+// =====================
+const firebaseConfig = {
   apiKey: "AIzaSyC10IWy6vUrqwIXtugXSdQoXEoaeKlcFu0",
+  https://mobilnopranje-d60f6-default-rtdb.europe-west1.firebasedatabase.app/
   authDomain: "mobilnopranje-d60f6.firebaseapp.com",
+  databaseURL: "https://mobilnopranje-d60f6-default-rtdb.firebaseio.com", // <-- PROVERI U CONSOLE
   projectId: "mobilnopranje-d60f6",
-  storageBucket: "mobilnopranje-d60f6.firebasestorage.app",
+  storageBucket: "mobilnopranje-d60f6.appspot.com",
   messagingSenderId: "862210046561",
   appId: "1:862210046561:web:a073eb551cdff9199dc820"
 };
-};
+
 firebase.initializeApp(firebaseConfig);
-var db = firebase.database();
-var auth = firebase.auth();
+const db = firebase.database();
+const auth = firebase.auth();
 
-// ---------------- NAV ----------------
-function scrollToSection(id){
-  document.getElementById(id).scrollIntoView({behavior:"smooth"});
+// =====================
+// FAQ toggle
+// =====================
+document.querySelectorAll("[data-faq]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const ans = btn.nextElementSibling;
+    const icon = btn.querySelector(".faq__icon");
+    const open = ans.style.display === "block";
+    ans.style.display = open ? "none" : "block";
+    icon.textContent = open ? "+" : "–";
+    if(!open){
+      btn.style.borderRadius = "16px 16px 0 0";
+      ans.style.borderRadius = "0 0 16px 16px";
+    } else {
+      btn.style.borderRadius = "16px";
+    }
+  });
+});
+
+// =====================
+// Booking UI elements
+// =====================
+const elTitle = document.getElementById("calTitle");
+const elDow   = document.getElementById("dow");
+const elGrid  = document.getElementById("calGrid");
+
+const elPkg   = document.getElementById("pkg");
+const elWhats = document.getElementById("whats");
+const elSlots = document.getElementById("slots");
+
+const elInfo  = document.getElementById("selectedInfo");
+const elSumDate = document.getElementById("sumDate");
+const elSumTime = document.getElementById("sumTime");
+const elSumPkg  = document.getElementById("sumPkg");
+
+const btnSend = document.getElementById("sendReq");
+const btnReset = document.getElementById("reset");
+
+document.getElementById("prevMonth").addEventListener("click", ()=>{ viewMonth(-1); });
+document.getElementById("nextMonth").addEventListener("click", ()=>{ viewMonth(1); });
+
+// =====================
+// Booking state
+// =====================
+const START_HOUR = 17;
+const END_HOUR = 22;
+const STEP_MIN = 30;
+
+let view = new Date();
+view.setDate(1);
+
+let selected = null;      // {y,m,d}
+let selectedTime = null;  // minutes from 00:00
+
+const DOW = ["Pon","Uto","Sre","Čet","Pet","Sub","Ned"];
+renderDow();
+renderCalendar();
+renderSummary();
+
+// =====================
+// Helpers
+// =====================
+function pad2(n){ return String(n).padStart(2,"0"); }
+function monthTitle(dt){ return dt.toLocaleString("sr-RS",{month:"long",year:"numeric"}); }
+function dateKey(y,m,d){ return `${y}-${pad2(m+1)}-${pad2(d)}`; }  // ISO key
+function niceDate(y,m,d){ return `${pad2(d)}/${pad2(m+1)}/${y}`; }
+function niceTime(min){
+  const h = Math.floor(min/60);
+  const m = min%60;
+  return `${pad2(h)}:${pad2(m)}`;
+}
+function isPast(y,m,d){
+  const t = new Date(); t.setHours(0,0,0,0);
+  const x = new Date(y,m,d); x.setHours(0,0,0,0);
+  return x < t;
 }
 
-// ---------------- FAQ ----------------
-function toggleFAQ(el){
-  let p=el.nextElementSibling;
-  p.style.display = (p.style.display==="block")?"none":"block";
+function renderDow(){
+  elDow.innerHTML = "";
+  DOW.forEach(name=>{
+    const div = document.createElement("div");
+    div.textContent = name;
+    elDow.appendChild(div);
+  });
 }
 
-// ---------------- MODAL ----------------
-const bookingModal = document.getElementById("bookingModal");
-const adminModal = document.getElementById("adminModal");
-
-function openBooking(){bookingModal.style.display="block"; renderCalendar();}
-function closeBooking(){bookingModal.style.display="none";}
-function openAdmin(){adminModal.style.display="block";}
-function closeAdmin(){adminModal.style.display="none";}
-
-// ---------------- CALENDAR ----------------
-let currentDate = new Date();
-let selectedDate = null;
-const monthYear = document.getElementById("monthYear");
-const calendarGrid = document.getElementById("calendarGrid");
-const packageSelect = document.getElementById("packageSelect");
-const timeSelect = document.getElementById("timeSelect");
-const confirmBtn = document.getElementById("confirmBooking");
-
-function renderCalendar(){
-  calendarGrid.innerHTML = "";
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  monthYear.innerText = currentDate.toLocaleString("sr-RS",{month:"long", year:"numeric"});
-
-  const firstDay = new Date(year,month,1).getDay();
-  const daysInMonth = new Date(year,month+1,0).getDate();
-  const today = new Date();
-  today.setHours(0,0,0,0);
-
-  for(let i=0;i<firstDay;i++){
-    let empty = document.createElement("div");
-    calendarGrid.appendChild(empty);
-  }
-
-  for(let d=1;d<=daysInMonth;d++){
-    let dayDiv = document.createElement("div");
-    dayDiv.className="day";
-    dayDiv.innerText=d;
-    const thisDate = new Date(year,month,d);
-    if(thisDate < today) dayDiv.classList.add("disabled");
-    else dayDiv.onclick=()=>selectDate(d,month,year,dayDiv);
-    calendarGrid.appendChild(dayDiv);
-  }
-}
-
-function changeMonth(step){
-  currentDate.setMonth(currentDate.getMonth()+step);
+function viewMonth(step){
+  view.setMonth(view.getMonth()+step);
   renderCalendar();
 }
 
-function selectDate(day,month,year,element){
-  document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected"));
-  element.classList.add("selected");
-  selectedDate={day,month,year};
-  populateTimes();
-}
+// =====================
+// Calendar rendering
+// =====================
+function renderCalendar(){
+  elTitle.textContent = monthTitle(view);
+  elGrid.innerHTML = "";
 
-// ---------------- TIME ----------------
-function populateTimes(){
-  timeSelect.innerHTML="";
-  if(!selectedDate) return;
-  const dateStr=`${selectedDate.day}/${selectedDate.month+1}/${selectedDate.year}`;
-  const duration=parseInt(packageSelect.value);
+  const y = view.getFullYear();
+  const m = view.getMonth();
 
-  db.ref("bookings").once("value",snap=>{
-    let dayBookings=[];
-    snap.forEach(s=>{
-      if(s.val().date===dateStr) dayBookings.push(s.val());
-    });
+  const first = new Date(y,m,1);
+  let startIndex = first.getDay();           // 0=ned
+  startIndex = (startIndex===0) ? 6 : startIndex-1; // pon=0
 
-    let available=false;
-    for(let h=17; h<22; h++){
-      for(let m of [0,30]){
-        const start=h*60+m;
-        const end=start+duration;
-        const clash=dayBookings.some(b=>start<(b.time+b.duration)&&end>b.time);
-        let option=document.createElement("option");
-        option.value=start;
-        option.innerText=`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
-        if(clash){option.disabled=true; option.innerText+=" (zauzeto)";}
-        else available=true;
-        timeSelect.appendChild(option);
-      }
+  const daysInMonth = new Date(y,m+1,0).getDate();
+
+  for(let i=0;i<startIndex;i++){
+    const empty = document.createElement("div");
+    empty.className = "day day--empty";
+    elGrid.appendChild(empty);
+  }
+
+  for(let d=1; d<=daysInMonth; d++){
+    const cell = document.createElement("div");
+    cell.className = "day";
+    cell.textContent = d;
+
+    if(isPast(y,m,d)){
+      cell.classList.add("day--disabled");
+    } else {
+      cell.addEventListener("click", async ()=>{
+        selected = {y,m,d};
+        selectedTime = null;
+        document.querySelectorAll(".day--selected").forEach(x=>x.classList.remove("day--selected"));
+        cell.classList.add("day--selected");
+        elInfo.textContent = `Izabran datum: ${niceDate(y,m,d)}. Izaberi vreme.`;
+        await renderSlots();
+        renderSummary();
+      });
     }
-    confirmBtn.disabled = !available;
-  });
+
+    if(selected && selected.y===y && selected.m===m && selected.d===d){
+      cell.classList.add("day--selected");
+    }
+
+    elGrid.appendChild(cell);
+  }
 }
 
-packageSelect.addEventListener("change",()=>{if(selectedDate) populateTimes();});
+// =====================
+// Slots rendering (clickable buttons)
+// =====================
+async function renderSlots(){
+  elSlots.innerHTML = "";
+  btnSend.disabled = true;
 
-// ---------------- CONFIRM ----------------
-confirmBtn.addEventListener("click",()=>{
-  if(!selectedDate || !timeSelect.value){alert("Izaberite datum i vreme"); return;}
-  const packageName = packageSelect.options[packageSelect.selectedIndex].text;
-  const timeVal = parseInt(timeSelect.value);
-  const duration = parseInt(packageSelect.value);
-  const dateStr = `${selectedDate.day}/${selectedDate.month+1}/${selectedDate.year}`;
+  if(!selected){
+    elSlots.innerHTML = `<div class="muted">Izaberi datum da vidiš slobodne termine.</div>`;
+    return;
+  }
 
-  db.ref("bookings").push({date:dateStr, time:timeVal, duration:duration, package:packageName});
-  alert("Termin rezervisan!");
-  window.open(`https://wa.me/381668009318?text=Rezervacija ${dateStr} Paket: ${packageName} Vreme: ${Math.floor(timeVal/60)}:${(timeVal%60).toString().padStart(2,'0')}`);
-  closeBooking();
+  const duration = parseInt(elPkg.value,10);
+  const key = dateKey(selected.y, selected.m, selected.d);
+
+  // Read bookings for that day
+  const snap = await db.ref("bookings").orderByChild("dateKey").equalTo(key).once("value");
+  const bookings = [];
+  snap.forEach(s => bookings.push(s.val()));
+
+  let hasAny = false;
+
+  for(let h=START_HOUR; h<END_HOUR; h++){
+    for(let mm of [0, STEP_MIN]){
+      const start = h*60 + mm;
+      const end = start + duration;
+      if(end > END_HOUR*60) continue;
+
+      const clash = bookings.some(b => start < (b.time + b.duration) && end > b.time);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "slot";
+      btn.textContent = niceTime(start);
+
+      if(clash){
+        btn.classList.add("slot--disabled");
+        btn.disabled = true;
+      } else {
+        hasAny = true;
+        btn.addEventListener("click", ()=>{
+          document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
+          btn.classList.add("slot--selected");
+          selectedTime = start;
+          btnSend.disabled = false;
+          renderSummary();
+        });
+      }
+
+      // keep selected highlight on rerender
+      if(selectedTime === start){
+        btn.classList.add("slot--selected");
+        btnSend.disabled = false;
+      }
+
+      elSlots.appendChild(btn);
+    }
+  }
+
+  if(!hasAny){
+    elSlots.innerHTML = `<div class="muted">Nema slobodnih termina za ovaj datum (za izabrani paket).</div>`;
+  }
+}
+
+// Re-render slots when package changes
+elPkg.addEventListener("change", async ()=>{
+  selectedTime = null;
+  btnSend.disabled = true;
+  await renderSlots();
+  renderSummary();
 });
 
-// ---------------- ADMIN ----------------
-function loginAdmin(){
-  const email = document.getElementById("adminEmail").value;
-  const pass = document.getElementById("adminPass").value;
-  auth.signInWithEmailAndPassword(email,pass)
-  .then(()=>{
-    document.getElementById("adminContent").classList.remove("hidden");
-    loadAdmin();
-  })
-  .catch(e=>alert("Login failed: "+e.message));
+// Reset
+btnReset.addEventListener("click", ()=>{
+  selected = null;
+  selectedTime = null;
+  btnSend.disabled = true;
+  elInfo.textContent = "Izaberi datum.";
+  elSlots.innerHTML = `<div class="muted">Izaberi datum da vidiš slobodne termine.</div>`;
+  document.querySelectorAll(".day--selected").forEach(x=>x.classList.remove("day--selected"));
+  renderSummary();
+});
+
+// Summary
+function renderSummary(){
+  elSumDate.textContent = selected ? niceDate(selected.y,selected.m,selected.d) : "—";
+  elSumTime.textContent = (selectedTime!=null) ? niceTime(selectedTime) : "—";
+  elSumPkg.textContent = elPkg.options[elPkg.selectedIndex]?.text || "—";
 }
 
-function loadAdmin(){
-  db.ref("bookings").once("value",snap=>{
-    const container=document.getElementById("adminBookings");
-    container.innerHTML="";
-    snap.forEach(s=>{
-      const b = s.val();
-      const div=document.createElement("div");
-      div.innerHTML=`${b.date} - ${Math.floor(b.time/60)}:${(b.time%60).toString().padStart(2,'0')} Paket: ${b.package} 
-      <button onclick="deleteBooking('${s.key}')">Obriši</button>`;
-      container.appendChild(div);
-    });
+// =====================
+// Send request (Firebase + WhatsApp)
+// =====================
+btnSend.addEventListener("click", async ()=>{
+  if(!selected || selectedTime==null) return;
+
+  const phone = (elWhats.value || "").trim();
+  if(!phone){
+    alert("Upiši WhatsApp broj (npr. 3816...)");
+    return;
+  }
+
+  const duration = parseInt(elPkg.value,10);
+  const packageName = elPkg.options[elPkg.selectedIndex].text;
+
+  const key = dateKey(selected.y, selected.m, selected.d);
+  const dateText = niceDate(selected.y, selected.m, selected.d);
+
+  // Re-check clash just before write
+  const snap = await db.ref("bookings").orderByChild("dateKey").equalTo(key).once("value");
+  const bookings = [];
+  snap.forEach(s => bookings.push(s.val()));
+
+  const end = selectedTime + duration;
+  const clash = bookings.some(b => selectedTime < (b.time + b.duration) && end > b.time);
+  if(clash){
+    alert("Upravo je zauzet taj termin. Izaberi drugi.");
+    await renderSlots();
+    return;
+  }
+
+  await db.ref("bookings").push({
+    dateKey: key,
+    dateText,
+    time: selectedTime,
+    duration,
+    package: packageName,
+    createdAt: Date.now()
   });
-}
 
-function deleteBooking(key){db.ref("bookings/"+key).remove(); loadAdmin();}
+  const msg = `Rezervacija ${dateText} Paket: ${packageName} Vreme: ${niceTime(selectedTime)}`;
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+
+  alert("Termin rezervisan!");
+  await renderSlots();
+});
+
+// =====================
+// ADMIN
+// =====================
+const adminEmail = document.getElementById("adminEmail");
+const adminPass  = document.getElementById("adminPass");
+const adminLogin = document.getElementById("adminLogin");
+const adminList  = document.getElementById("adminList");
+const refreshAdmin = document.getElementById("refreshAdmin");
+
+adminLogin.addEventListener("click", async ()=>{
+  const email = adminEmail.value.trim();
+  const pass  = adminPass.value.trim();
+  if(!email || !pass){ alert("Unesi email i šifru."); return; }
+
+  try{
+    await auth.signInWithEmailAndPassword(email, pass);
+    await loadAdmin();
+  }catch(e){
+    alert("Login failed: " + e.message);
+  }
+});
+
+refreshAdmin.addEventListener("click", loadAdmin);
+
+async function loadAdmin(){
+  adminList.innerHTML = `<div class="muted">Učitavanje...</div>`;
+  const snap = await db.ref("bookings").orderByChild("createdAt").once("value");
+  const arr = [];
+  snap.forEach(s => arr.push({key:s.key, ...s.val()}));
+  arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+  if(arr.length===0){
+    adminList.innerHTML = `<div class="muted">Nema rezervacija.</div>`;
+    return;
+  }
+
+  adminList.innerHTML = "";
+  for(const b of arr){
+    const item = document.createElement("div");
+    item.className = "adminItem";
+
+    item.innerHTML = `
+      <div class="adminItem__meta">
+        <div><b>${b.dateText || b.dateKey}</b> • ${niceTime(b.time)} • ${b.duration} min</div>
+        <div class="muted">${b.package}</div>
+      </div>
+      <button class="danger" type="button">Obriši</button>
+    `;
+
+    item.querySelector("button").addEventListener("click", async ()=>{
+      await db.ref("bookings/"+b.key).remove();
+      await loadAdmin();
+      // refresh booking UI if date selected
+      if(selected) await renderSlots();
+    });
+
+    adminList.appendChild(item);
+  }
+}
