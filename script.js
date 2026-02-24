@@ -17,6 +17,12 @@ function isPast(y,m,d){
   const x = new Date(y, m, d);
   return x < today;
 }
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_, reject)=>setTimeout(()=>reject(new Error("timeout")), ms))
+  ]);
+}
 
 // ---------------------
 // Firebase (ne ruši UI)
@@ -29,7 +35,7 @@ try{
   const firebaseConfig = {
     apiKey: "AIzaSyC10IWy6vUrqwIXtugXSdQoXEoaeKlcFu0",
     authDomain: "mobilnopranje-d60f6.firebaseapp.com",
-    databaseURL: "https://mobilnopranje-d60f6-default-rtdb.firebaseio.com", // proveri da je tacno
+    databaseURL: "https://mobilnopranje-d60f6-default-rtdb.firebaseio.com",
     projectId: "mobilnopranje-d60f6",
     storageBucket: "mobilnopranje-d60f6.appspot.com",
     messagingSenderId: "862210046561",
@@ -43,14 +49,6 @@ try{
 }catch(e){
   console.error("Firebase init error:", e);
   firebaseReady = false;
-}
-
-// Timeout helper: ako Firebase “zaglavi”, nastavi dalje
-function withTimeout(promise, ms){
-  return Promise.race([
-    promise,
-    new Promise((_, reject)=>setTimeout(()=>reject(new Error("timeout")), ms))
-  ]);
 }
 
 // ---------------------
@@ -72,7 +70,13 @@ document.querySelectorAll("[data-faq]").forEach(btn=>{
 const elTitle = $("calTitle");
 const elDow   = $("dow");
 const elGrid  = $("calGrid");
-const elPkg   = $("pkg");
+
+const elPkg   = $("pkg");         // hidden select (logic)
+const ddRoot  = $("pkgDD");
+const ddBtn   = $("pkgBtn");
+const ddVal   = $("pkgValue");
+const ddMenu  = $("pkgMenu");
+
 const elWhats = $("whats");
 const elSlots = $("slots");
 const elInfo  = $("selectedInfo");
@@ -98,7 +102,86 @@ let selectedTime = null;
 
 const DOW = ["Pon","Uto","Sre","Čet","Pet","Sub","Ned"];
 
-// init
+// ---------------------
+// Custom dropdown build
+// ---------------------
+function buildPkgDropdown(){
+  ddMenu.innerHTML = "";
+  const opts = Array.from(elPkg.options);
+
+  const setSelected = (value)=>{
+    elPkg.value = value;
+    const text = elPkg.options[elPkg.selectedIndex]?.text || "";
+    ddVal.textContent = text;
+    // refresh summary + slots
+    selectedTime = null;
+    btnSend.disabled = true;
+    renderSummary();
+    if(selected) renderSlots();
+  };
+
+  opts.forEach((o)=>{
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "dd__opt";
+    btn.setAttribute("role","option");
+    btn.dataset.value = o.value;
+
+    // badge (60/90/120)
+    btn.innerHTML = `
+      <span>${o.text}</span>
+      <span class="dd__badge">${o.value} min</span>
+    `;
+
+    btn.addEventListener("click", ()=>{
+      opts.forEach(x=>x.selected=false);
+      o.selected = true;
+
+      // aria selected update
+      ddMenu.querySelectorAll(".dd__opt").forEach(x=>x.setAttribute("aria-selected","false"));
+      btn.setAttribute("aria-selected","true");
+
+      setSelected(o.value);
+      closeDD();
+    });
+
+    btn.setAttribute("aria-selected", o.selected ? "true" : "false");
+    ddMenu.appendChild(btn);
+  });
+
+  // initial value
+  ddVal.textContent = elPkg.options[elPkg.selectedIndex]?.text || "";
+}
+
+function openDD(){
+  ddRoot.classList.add("dd--open");
+  ddBtn.setAttribute("aria-expanded","true");
+}
+function closeDD(){
+  ddRoot.classList.remove("dd--open");
+  ddBtn.setAttribute("aria-expanded","false");
+}
+function toggleDD(){
+  if(ddRoot.classList.contains("dd--open")) closeDD();
+  else openDD();
+}
+
+ddBtn.addEventListener("click", (e)=>{
+  e.preventDefault();
+  toggleDD();
+});
+
+document.addEventListener("click", (e)=>{
+  if(!ddRoot.contains(e.target)) closeDD();
+});
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape") closeDD();
+});
+
+// ---------------------
+// Init
+// ---------------------
+buildPkgDropdown();
 renderDow();
 renderCalendar();
 renderSummary();
@@ -188,14 +271,12 @@ function renderSlotsPlaceholder(){
   btnSend.disabled = true;
 }
 
-// Ako Firebase radi sporo/loše, ne blokiramo UI
 async function getBookingsForDaySafe(key){
   if(!firebaseReady || !db) return {bookings:[], source:"offline"};
 
   try{
     const readPromise = db.ref("bookings").orderByChild("dateKey").equalTo(key).once("value");
-    const snap = await withTimeout(readPromise, 2000); // 2s timeout
-
+    const snap = await withTimeout(readPromise, 2000); // 2s
     const arr = [];
     snap.forEach(s => arr.push(s.val()));
     return {bookings: arr, source:"firebase"};
@@ -256,24 +337,13 @@ async function renderSlots(){
     }
   }
 
-  // meta info
-  const sourceText = (source==="firebase")
-    ? "sinhronizovano"
-    : (source==="timeout" ? "offline prikaz (Firebase spor)" : "offline prikaz");
-
+  const sourceText = (source==="firebase") ? "sinhronizovano" : "offline prikaz";
   updateSlotsMeta(`Slotovi: ${created} • Slobodno: ${free} • ${sourceText}`);
 
   if(created === 0){
     elSlots.innerHTML = `<div class="muted">Nema slotova za ovaj paket (prelazi 22:00).</div>`;
   }
 }
-
-elPkg.addEventListener("change", async ()=>{
-  selectedTime = null;
-  btnSend.disabled = true;
-  if(selected) await renderSlots();
-  renderSummary();
-});
 
 // ---------------------
 // Summary + reset
@@ -297,7 +367,7 @@ btnReset.addEventListener("click", ()=>{
 });
 
 // ---------------------
-// Send request (ako Firebase ne radi, i dalje šalje WA)
+// Send request
 // ---------------------
 btnSend.addEventListener("click", async ()=>{
   if(!selected || selectedTime==null) return;
@@ -315,7 +385,7 @@ btnSend.addEventListener("click", async ()=>{
   // uvek pošalji WA
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
 
-  // pokušaj upis u bazu, ali ne blokiraj korisnika
+  // pokušaj upis u bazu
   if(!firebaseReady || !db){
     alert("Poslat WhatsApp zahtev. (Firebase nije povezan — nije upisano u bazu)");
     return;
