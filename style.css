@@ -310,3 +310,52 @@ body{background:radial-gradient(1200px 600px at 20% -10%, rgba(0,194,255,.18), t
   .slots{grid-template-columns:repeat(2,1fr)}
   .hero h1{font-size:32px}
 }
+
+/* Select da bude "profi" i uklopljen */
+select.input{
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)),
+    rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14);
+  padding-right:42px;
+  cursor:pointer;
+}
+
+/* Strelica za select */
+select.input{
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)),
+    radial-gradient(circle at 92% 50%, rgba(0,194,255,.45) 0, rgba(0,194,255,0) 55%);
+  background-repeat:no-repeat;
+  background-position: 0 0, right 14px center;
+  background-size: auto, 18px 18px;
+}
+
+/* Slots: da se vidi da su klikabilni */
+.slots{
+  min-height:120px;            /* da ne izgleda prazno */
+  align-content:start;
+}
+
+.slot{
+  transition: .16s ease;
+}
+
+.slot:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0,194,255,.12);
+}
+
+/* Jasnije disabled */
+.slot--disabled{
+  opacity:.25;
+  filter:saturate(.4);
+}
+
+/* Ako nema termina */
+.slots .muted{
+  padding:10px 0;
+}
