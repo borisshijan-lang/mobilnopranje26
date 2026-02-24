@@ -4,57 +4,108 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mobilno Pranje PRO</title>
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<style>
+/* GLOBAL */
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
+body{background:#0f0f0f;color:#fff;scroll-behavior:smooth}
+a{text-decoration:none;color:inherit;cursor:pointer}
+h2{text-align:center;margin-bottom:40px;font-size:36px}
+button{cursor:pointer;border:none}
+
+/* NAVBAR */
+nav{
+position:fixed;top:0;width:100%;background:#000;display:flex;justify-content:space-between;align-items:center;padding:15px 10%;z-index:1000;
+}
+.logo{font-weight:700;font-size:22px;cursor:pointer}
+.nav-links{display:flex;gap:20px}
+.nav-links a:hover{color:#00c2ff}
+
+/* HERO */
+.hero{
+height:100vh;background:url('https://images.pexels.com/photos/210019/pexels-photo-210019.jpeg') center/cover no-repeat;
+display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
+}
+.hero h1{font-size:55px;margin-bottom:15px}
+.hero button{background:#00c2ff;padding:12px 25px;border-radius:30px;font-size:18px}
+
+/* CARDS */
+.cards{display:flex;flex-wrap:wrap;gap:20px;justify-content:center}
+.card{background:#1a1a1a;padding:25px;border-radius:15px;transition:.3s;flex:1 1 250px;text-align:center;max-width:300px}
+.card:hover{transform:translateY(-10px);background:#222}
+
+/* GALLERY */
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin:0 auto;max-width:1200px}
+.gallery img{width:100%;border-radius:10px}
+
+/* FAQ */
+.faq-item{margin-bottom:15px}
+.faq-item p{display:none;color:#ccc;margin-top:5px}
+
+/* BOOKING */
+#bookingSection{padding:40px 10%}
+#calendarGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:20px}
+.day-name{font-size:12px;opacity:0.7;text-align:center}
+.day{padding:10px;background:#222;border-radius:6px;text-align:center;cursor:pointer}
+.day:hover{background:#00c2ff}
+.day.disabled{background:#333;color:#666;cursor:not-allowed}
+.day.selected{border:2px solid #00c2ff}
+select,button{padding:10px;border-radius:6px;margin:5px 0;width:100%;font-size:15px}
+
+/* FOOTER */
+footer{background:#000;text-align:center;padding:30px;color:#aaa}
+
+/* RESPONSIVE */
+@media(max-width:500px){
+.hero h1{font-size:28px}
+.cards{flex-direction:column;align-items:center}
+}
+</style>
 </head>
 <body>
 
 <nav>
-<div onclick="window.scrollTo(0,0)" class="logo">Mobilno Pranje</div>
+<div class="logo" onclick="window.scrollTo(0,0)">Mobilno Pranje</div>
 <div class="nav-links">
 <a onclick="scrollToSection('about')">O nama</a>
 <a onclick="scrollToSection('services')">Usluge</a>
 <a onclick="scrollToSection('prices')">Cene</a>
 <a onclick="scrollToSection('gallery')">Galerija</a>
 <a onclick="scrollToSection('faq')">FAQ</a>
-<a onclick="openBooking()">Zakazivanje</a>
-<a onclick="openAdmin()">Admin</a>
+<a onclick="scrollToSection('bookingSection')">Zakazivanje</a>
+<a onclick="scrollToSection('adminSection')">Admin</a>
 </div>
 </nav>
 
-<!-- HERO -->
 <section class="hero">
 <h1>Profesionalno mobilno pranje vozila</h1>
-<button onclick="openBooking()">Zakaži termin</button>
+<button onclick="scrollToSection('bookingSection')">Zakaži termin</button>
 </section>
 
-<!-- O NAMA -->
 <section id="about">
 <h2>O nama</h2>
 <p>Dolazimo na vašu adresu i pružamo profesionalnu uslugu detaljnog pranja vozila.</p>
 </section>
 
-<!-- USLUGE -->
 <section id="services">
 <h2>Usluge</h2>
+<div class="cards">
 <div class="card"><h3>Osnovno</h3><p>Spoljašnje pranje + felne + sušenje</p><p>60 min</p></div>
 <div class="card"><h3>Standard</h3><p>Spolja + unutrašnje čišćenje + plastike + stakla</p><p>90 min</p></div>
 <div class="card"><h3>Premium</h3><p>Dubinsko čišćenje enterijera + kompletno spolja</p><p>120 min</p></div>
+</div>
 </section>
 
-<!-- CENE -->
 <section id="prices">
-<h2>Cenovnik</h2>
+<h2>Cene</h2>
+<div class="cards">
 <div class="card"><h3>Osnovno</h3><p>20€ – Spoljašnje pranje, felne, sušenje</p></div>
 <div class="card"><h3>Standard</h3><p>35€ – Spolja + unutrašnje čišćenje enterijera</p></div>
 <div class="card"><h3>Premium</h3><p>60€ – Dubinsko čišćenje enterijera + kompletno spolja</p></div>
+</div>
 </section>
 
-<!-- GALERIJA -->
 <section id="gallery">
 <h2>Galerija</h2>
 <div class="gallery">
@@ -64,7 +115,6 @@
 </div>
 </section>
 
-<!-- FAQ -->
 <section id="faq">
 <h2>FAQ</h2>
 <div class="faq-item">
@@ -77,48 +127,140 @@
 </div>
 </section>
 
-<!-- BOOKING MODAL -->
-<div id="bookingModal" class="modal hidden">
-<div class="modal-content">
-<span class="close" onclick="closeBooking()">X</span>
-
-<div class="calendar-header">
-<button onclick="changeMonth(-1)">◀</button>
-<h3 id="monthYear"></h3>
-<button onclick="changeMonth(1)">▶</button>
-</div>
-
+<section id="bookingSection">
+<h2>Zakazivanje termina</h2>
 <div id="calendarGrid"></div>
-
 <select id="packageSelect">
 <option value="60">Osnovno (60min)</option>
 <option value="90">Standard (90min)</option>
 <option value="120">Premium (120min)</option>
 </select>
-
 <select id="timeSelect">
 <option>Izaberite datum prvo</option>
 </select>
-
 <button id="confirmBooking" disabled>Pošalji zahtev</button>
-</div>
-</div>
+</section>
 
-<!-- ADMIN MODAL -->
-<div id="adminModal" class="modal hidden">
-<div class="modal-content">
-<span class="close" onclick="closeAdmin()">X</span>
+<section id="adminSection">
 <h2>Admin Panel</h2>
 <input type="email" id="adminEmail" placeholder="Email">
 <input type="password" id="adminPass" placeholder="Šifra">
 <button onclick="loginAdmin()">Login</button>
-<div id="adminContent" class="hidden">
-<h3>Rezervacije</h3>
-<div id="adminBookings"></div>
-</div>
-</div>
-</div>
+<div id="adminContent"></div>
+</section>
 
-<script src="script.js"></script>
-</body>
-</html>
+<footer>
+<p>© 2026 Mobilno Pranje</p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script>
+/* ---------------- FIREBASE ---------------- */
+var firebaseConfig = {
+  apiKey: "AIzaSyC10IWy6vUrqwIXtugXSdQoXEoaeKlcFu0",
+  authDomain: "mobilnopranje-d60f6.firebaseapp.com",
+  projectId: "mobilnopranje-d60f6",
+  storageBucket: "mobilnopranje-d60f6.firebasestorage.app",
+  messagingSenderId: "862210046561",
+  appId: "1:862210046561:web:a073eb551cdff9199dc820"
+};
+firebase.initializeApp(firebaseConfig);
+var db=firebase.database();
+var auth=firebase.auth();
+
+/* ---------------- NAV + FAQ ---------------- */
+function scrollToSection(id){document.getElementById(id).scrollIntoView({behavior:"smooth"});}
+function toggleFAQ(el){let p=el.nextElementSibling;p.style.display=(p.style.display==="block")?"none":"block";}
+
+/* ---------------- CALENDAR ---------------- */
+let currentDate=new Date();
+let selectedDate=null;
+const monthYear=document.createElement('h3'); // placeholder, can ignore for now
+const calendarGrid=document.getElementById("calendarGrid");
+const packageSelect=document.getElementById("packageSelect");
+const timeSelect=document.getElementById("timeSelect");
+const confirmBtn=document.getElementById("confirmBooking");
+
+function renderCalendar(){
+  calendarGrid.innerHTML="";
+  const year=currentDate.getFullYear();
+  const month=currentDate.getMonth();
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const today=new Date();today.setHours(0,0,0,0);
+  for(let i=0;i<firstDay;i++){let e=document.createElement("div");calendarGrid.appendChild(e);}
+  for(let d=1;d<=daysInMonth;d++){
+    let dayDiv=document.createElement("div");dayDiv.className="day";dayDiv.innerText=d;
+    const thisDate=new Date(year,month,d);
+    if(thisDate<today) dayDiv.classList.add("disabled");
+    else dayDiv.onclick=()=>selectDate(d,month,year,dayDiv);
+    calendarGrid.appendChild(dayDiv);
+  }
+}
+renderCalendar();
+
+function selectDate(day,month,year,el){
+  document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected"));
+  el.classList.add("selected");
+  selectedDate={day,month,year};
+  populateTimes();
+}
+
+packageSelect.addEventListener("change",()=>{if(selectedDate) populateTimes();});
+
+function populateTimes(){
+  timeSelect.innerHTML="";
+  if(!selectedDate) return;
+  const dateStr=`${selectedDate.day}/${selectedDate.month+1}/${selectedDate.year}`;
+  const duration=parseInt(packageSelect.value);
+  db.ref("bookings").once("value",snap=>{
+    let dayBookings=[];
+    snap.forEach(s=>{if(s.val().date===dateStr) dayBookings.push(s.val());});
+    let available=false;
+    for(let h=17;h<22;h++){
+      for(let m of [0,30]){
+        const start=h*60+m;
+        const end=start+duration;
+        const clash=dayBookings.some(b=>start<(b.time+b.duration)&&end>b.time);
+        let option=document.createElement("option");
+        option.value=start;
+        option.innerText=`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+        if(clash){option.disabled=true;option.innerText+=" (zauzeto)";}
+        else available=true;
+        timeSelect.appendChild(option);
+      }
+    }
+    confirmBtn.disabled=!available;
+  });
+}
+
+/* ---------------- CONFIRM ---------------- */
+confirmBtn.addEventListener("click",()=>{
+  if(!selectedDate || !timeSelect.value){alert("Izaberite datum i vreme");return;}
+  const packageName=packageSelect.options[packageSelect.selectedIndex].text;
+  const timeVal=parseInt(timeSelect.value);
+  const duration=parseInt(packageSelect.value);
+  const dateStr=`${selectedDate.day}/${selectedDate.month+1}/${selectedDate.year}`;
+  db.ref("bookings").push({date:dateStr,time:timeVal,duration:duration,package:packageName});
+  alert("Termin rezervisan!");
+  window.open(`https://wa.me/381668009318?text=Rezervacija ${dateStr} Paket: ${packageName} Vreme: ${Math.floor(timeVal/60)}:${(timeVal%60).toString().padStart(2,'0')}`);
+});
+
+/* ---------------- ADMIN ---------------- */
+function loginAdmin(){
+  const email=document.getElementById("adminEmail").value;
+  const pass=document.getElementById("adminPass").value;
+  auth.signInWithEmailAndPassword(email,pass)
+  .then(()=>{document.getElementById("adminContent").innerHTML="";loadAdmin();})
+  .catch(e=>alert("Login failed: "+e.message));
+}
+function loadAdmin(){
+  db.ref("bookings").once("value",snap=>{
+    const container=document.getElementById("adminContent");
+    container.innerHTML="";
+    snap.forEach(s=>{
+      const b=s.val();
+      const div=document.createElement("div");
+      div.innerHTML=`${b.date} - ${Math.floor(b.time/60)}:${(b.time%60).toString().padStart(2,'0')} Paket: ${b.package} <button onclick="deleteBooking('${s.key}')">Obriši</button>`;
