@@ -45,6 +45,14 @@ try{
   firebaseReady = false;
 }
 
+// Timeout helper: ako Firebase “zaglavi”, nastavi dalje
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_, reject)=>setTimeout(()=>reject(new Error("timeout")), ms))
+  ]);
+}
+
 // ---------------------
 // FAQ
 // ---------------------
@@ -95,7 +103,7 @@ renderDow();
 renderCalendar();
 renderSummary();
 renderSlotsPlaceholder();
-updateSlotsMeta(null);
+updateSlotsMeta("—");
 
 // ---------------------
 // Calendar
@@ -166,7 +174,6 @@ elGrid.addEventListener("click", async (e)=>{
   cell.classList.add("day--selected");
 
   elInfo.textContent = `Izabran datum: ${niceDate(y,m,d)}. Izaberi vreme.`;
-
   renderSummary();
   await renderSlots();
 });
@@ -174,25 +181,27 @@ elGrid.addEventListener("click", async (e)=>{
 // ---------------------
 // Slots
 // ---------------------
-function updateSlotsMeta(text){
-  elSlotsMeta.textContent = text ?? "—";
-}
+function updateSlotsMeta(text){ elSlotsMeta.textContent = text; }
 
 function renderSlotsPlaceholder(){
   elSlots.innerHTML = `<div class="muted">Izaberi datum da vidiš slobodne termine.</div>`;
   btnSend.disabled = true;
 }
 
-async function getBookingsForDay(key){
-  if(!firebaseReady || !db) return [];
+// Ako Firebase radi sporo/loše, ne blokiramo UI
+async function getBookingsForDaySafe(key){
+  if(!firebaseReady || !db) return {bookings:[], source:"offline"};
+
   try{
-    const snap = await db.ref("bookings").orderByChild("dateKey").equalTo(key).once("value");
+    const readPromise = db.ref("bookings").orderByChild("dateKey").equalTo(key).once("value");
+    const snap = await withTimeout(readPromise, 2000); // 2s timeout
+
     const arr = [];
     snap.forEach(s => arr.push(s.val()));
-    return arr;
+    return {bookings: arr, source:"firebase"};
   }catch(e){
-    console.error("DB read error:", e);
-    return [];
+    console.warn("Bookings fetch failed:", e.message);
+    return {bookings: [], source:"timeout"};
   }
 }
 
@@ -202,16 +211,18 @@ async function renderSlots(){
 
   if(!selected){
     renderSlotsPlaceholder();
-    updateSlotsMeta(null);
+    updateSlotsMeta("—");
     return;
   }
 
   const duration = parseInt(elPkg.value,10);
   const key = dateKey(selected.y, selected.m, selected.d);
-  const bookings = await getBookingsForDay(key);
+
+  const {bookings, source} = await getBookingsForDaySafe(key);
 
   elSlots.innerHTML = "";
   let created = 0;
+  let free = 0;
 
   for(let h=START_HOUR; h<END_HOUR; h++){
     for(let mm of [0, STEP_MIN]){
@@ -230,6 +241,7 @@ async function renderSlots(){
         b.classList.add("slot--disabled");
         b.disabled = true;
       } else {
+        free++;
         b.addEventListener("click", ()=>{
           document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
           b.classList.add("slot--selected");
@@ -244,18 +256,15 @@ async function renderSlots(){
     }
   }
 
-  updateSlotsMeta(`Prikazano slotova: ${created}`);
+  // meta info
+  const sourceText = (source==="firebase")
+    ? "sinhronizovano"
+    : (source==="timeout" ? "offline prikaz (Firebase spor)" : "offline prikaz");
+
+  updateSlotsMeta(`Slotovi: ${created} • Slobodno: ${free} • ${sourceText}`);
 
   if(created === 0){
     elSlots.innerHTML = `<div class="muted">Nema slotova za ovaj paket (prelazi 22:00).</div>`;
-  }
-
-  if(!firebaseReady){
-    const warn = document.createElement("div");
-    warn.className = "tiny muted";
-    warn.style.marginTop = "10px";
-    warn.textContent = "Firebase nije povezan (vidi Console). Slotovi se prikazuju, ali upis u bazu neće raditi dok ne središ Rules/URL.";
-    elSlots.appendChild(warn);
   }
 }
 
@@ -284,11 +293,11 @@ btnReset.addEventListener("click", ()=>{
   document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
   renderSummary();
   renderSlotsPlaceholder();
-  updateSlotsMeta(null);
+  updateSlotsMeta("—");
 });
 
 // ---------------------
-// Send request
+// Send request (ako Firebase ne radi, i dalje šalje WA)
 // ---------------------
 btnSend.addEventListener("click", async ()=>{
   if(!selected || selectedTime==null) return;
@@ -303,18 +312,12 @@ btnSend.addEventListener("click", async ()=>{
 
   const msg = `Rezervacija ${dateText} Paket: ${packageName} Vreme: ${niceTime(selectedTime)}`;
 
-  if(!firebaseReady || !db){
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
-    alert("Poslat WhatsApp zahtev (Firebase nije povezan).");
-    return;
-  }
+  // uvek pošalji WA
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
 
-  const bookings = await getBookingsForDay(key);
-  const end = selectedTime + duration;
-  const clash = bookings.some(b => selectedTime < (b.time + b.duration) && end > b.time);
-  if(clash){
-    alert("Upravo je zauzet taj termin. Izaberi drugi.");
-    await renderSlots();
+  // pokušaj upis u bazu, ali ne blokiraj korisnika
+  if(!firebaseReady || !db){
+    alert("Poslat WhatsApp zahtev. (Firebase nije povezan — nije upisano u bazu)");
     return;
   }
 
@@ -327,11 +330,10 @@ btnSend.addEventListener("click", async ()=>{
       package: packageName,
       createdAt: Date.now()
     });
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
-    alert("Termin rezervisan!");
+    alert("Termin upisan u bazu + poslat WhatsApp.");
     await renderSlots();
   }catch(e){
     console.error("DB write error:", e);
-    alert("Ne mogu da upišem termin u bazu. Proveri Firebase Rules.");
+    alert("Poslat WhatsApp, ali upis u bazu nije uspeo (proveri Rules).");
   }
 });
