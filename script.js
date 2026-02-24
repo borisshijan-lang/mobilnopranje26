@@ -1,27 +1,32 @@
 // =====================
-// 0) MINI helper
+// Helpers
 // =====================
 function $(id){ return document.getElementById(id); }
 function pad2(n){ return String(n).padStart(2,"0"); }
+
+// Latinica meseci:
 function monthTitle(dt){
-  // sr-Latn-RS = srpski latinica
   return dt.toLocaleString("sr-Latn-RS",{month:"long",year:"numeric"});
 }
-function dateKey(y,m,d){ return `${y}-${pad2(m+1)}-${pad2(d)}`; }  // ISO key
+
+function dateKey(y,m,d){ return `${y}-${pad2(m+1)}-${pad2(d)}`; }
 function niceDate(y,m,d){ return `${pad2(d)}/${pad2(m+1)}/${y}`; }
 function niceTime(min){
   const h = Math.floor(min/60);
   const m = min%60;
   return `${pad2(h)}:${pad2(m)}`;
 }
+
+// SIGURNA past provera (bez UTC gluposti)
 function isPast(y,m,d){
-  const t = new Date(); t.setHours(0,0,0,0);
-  const x = new Date(y,m,d); x.setHours(0,0,0,0);
-  return x < t;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const x = new Date(y, m, d);
+  return x < today;
 }
 
 // =====================
-// 1) Firebase init (NE SME da sruši UI)
+// Firebase init (ne sme da sruši UI)
 // =====================
 let db = null;
 let auth = null;
@@ -31,7 +36,7 @@ try{
   const firebaseConfig = {
     apiKey: "AIzaSyC10IWy6vUrqwIXtugXSdQoXEoaeKlcFu0",
     authDomain: "mobilnopranje-d60f6.firebaseapp.com",
-    databaseURL: "https://mobilnopranje-d60f6-default-rtdb.firebaseio.com", // <-- proveri da je 100% tacno
+    databaseURL: "https://mobilnopranje-d60f6-default-rtdb.firebaseio.com",
     projectId: "mobilnopranje-d60f6",
     storageBucket: "mobilnopranje-d60f6.appspot.com",
     messagingSenderId: "862210046561",
@@ -48,7 +53,7 @@ try{
 }
 
 // =====================
-// 2) FAQ toggle
+// FAQ
 // =====================
 document.querySelectorAll("[data-faq]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
@@ -61,7 +66,7 @@ document.querySelectorAll("[data-faq]").forEach(btn=>{
 });
 
 // =====================
-// 3) Booking UI elements
+// Booking elements
 // =====================
 const elTitle = $("calTitle");
 const elDow   = $("dow");
@@ -82,9 +87,7 @@ const btnReset = $("reset");
 $("prevMonth")?.addEventListener("click", ()=>{ viewMonth(-1); });
 $("nextMonth")?.addEventListener("click", ()=>{ viewMonth(1); });
 
-// =====================
-// 4) Booking state
-// =====================
+// State
 const START_HOUR = 17;
 const END_HOUR = 22;
 const STEP_MIN = 30;
@@ -93,21 +96,20 @@ let view = new Date();
 view.setDate(1);
 
 let selected = null;      // {y,m,d}
-let selectedTime = null;  // minutes from 00:00
+let selectedTime = null;  // minutes
 
 const DOW = ["Pon","Uto","Sre","Čet","Pet","Sub","Ned"];
 
-// init UI ALWAYS
+// Init
 renderDow();
 renderCalendar();
 renderSummary();
-renderSlots(); // pokaži placeholder odmah
+renderSlotsPlaceholder();
 
 // =====================
-// 5) Calendar
+// Calendar render
 // =====================
 function renderDow(){
-  if(!elDow) return;
   elDow.innerHTML = "";
   DOW.forEach(name=>{
     const div = document.createElement("div");
@@ -122,8 +124,6 @@ function viewMonth(step){
 }
 
 function renderCalendar(){
-  if(!elTitle || !elGrid) return;
-
   elTitle.textContent = monthTitle(view);
   elGrid.innerHTML = "";
 
@@ -131,12 +131,11 @@ function renderCalendar(){
   const m = view.getMonth();
 
   const first = new Date(y,m,1);
-  let startIndex = first.getDay();           // 0=ned
+  let startIndex = first.getDay(); // 0=ned
   startIndex = (startIndex===0) ? 6 : startIndex-1; // pon=0
 
   const daysInMonth = new Date(y,m+1,0).getDate();
 
-  // empty cells
   for(let i=0;i<startIndex;i++){
     const empty = document.createElement("div");
     empty.className = "day day--empty";
@@ -148,23 +147,15 @@ function renderCalendar(){
     cell.className = "day";
     cell.textContent = d;
 
+    cell.dataset.y = y;
+    cell.dataset.m = m;
+    cell.dataset.d = d;
+
     if(isPast(y,m,d)){
       cell.classList.add("day--disabled");
-    }else{
-      cell.addEventListener("click", async ()=>{
-        selected = {y,m,d};
-        selectedTime = null;
-
-        document.querySelectorAll(".day--selected")
-          .forEach(x=>x.classList.remove("day--selected"));
-        cell.classList.add("day--selected");
-
-        elInfo.textContent = `Izabran datum: ${niceDate(y,m,d)}. Izaberi vreme.`;
-        renderSummary();
-        await renderSlots();
-      });
     }
 
+    // keep highlight if same date
     if(selected && selected.y===y && selected.m===m && selected.d===d){
       cell.classList.add("day--selected");
     }
@@ -173,12 +164,39 @@ function renderCalendar(){
   }
 }
 
-// =====================
-// 6) Slots (klik na dugmiće)
-// =====================
-async function getBookingsForDay(key){
-  if(!firebaseReady || !db) return []; // bez firebase-a: prazno (svi slotovi slobodni)
+// EVENT DELEGATION (ovo rešava klik problem)
+elGrid.addEventListener("click", async (e)=>{
+  const cell = e.target.closest(".day");
+  if(!cell) return;
+  if(cell.classList.contains("day--empty")) return;
+  if(cell.classList.contains("day--disabled")) return;
 
+  const y = parseInt(cell.dataset.y,10);
+  const m = parseInt(cell.dataset.m,10);
+  const d = parseInt(cell.dataset.d,10);
+
+  selected = {y,m,d};
+  selectedTime = null;
+
+  document.querySelectorAll(".day--selected").forEach(x=>x.classList.remove("day--selected"));
+  cell.classList.add("day--selected");
+
+  elInfo.textContent = `Izabran datum: ${niceDate(y,m,d)}. Izaberi vreme.`;
+
+  renderSummary();
+  await renderSlots();
+});
+
+// =====================
+// Slots
+// =====================
+function renderSlotsPlaceholder(){
+  elSlots.innerHTML = `<div class="muted">Izaberi datum da vidiš slobodne termine.</div>`;
+  btnSend.disabled = true;
+}
+
+async function getBookingsForDay(key){
+  if(!firebaseReady || !db) return [];
   try{
     const snap = await db.ref("bookings").orderByChild("dateKey").equalTo(key).once("value");
     const bookings = [];
@@ -191,22 +209,18 @@ async function getBookingsForDay(key){
 }
 
 async function renderSlots(){
-  if(!elSlots) return;
+  elSlots.innerHTML = `<div class="muted">Učitavanje termina...</div>`;
+  btnSend.disabled = true;
 
- elSlots.innerHTML = `<div class="muted">Učitavanje termina...</div>`;
-btnSend.disabled = true;
-
-
-  if(!selected){ // reset container pre punjenja
-elSlots.innerHTML = "";
-
-    elSlots.innerHTML = `<div class="muted">Izaberi datum da vidiš slobodne termine.</div>`;
+  if(!selected){
+    renderSlotsPlaceholder();
     return;
   }
 
+  elSlots.innerHTML = "";
+
   const duration = parseInt(elPkg.value,10);
   const key = dateKey(selected.y, selected.m, selected.d);
-
   const bookings = await getBookingsForDay(key);
 
   let hasAny = false;
@@ -230,18 +244,12 @@ elSlots.innerHTML = "";
       } else {
         hasAny = true;
         b.addEventListener("click", ()=>{
-          document.querySelectorAll(".slot--selected")
-            .forEach(x=>x.classList.remove("slot--selected"));
+          document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
           b.classList.add("slot--selected");
           selectedTime = start;
           btnSend.disabled = false;
           renderSummary();
         });
-      }
-
-      if(selectedTime === start){
-        b.classList.add("slot--selected");
-        btnSend.disabled = false;
       }
 
       elSlots.appendChild(b);
@@ -252,25 +260,25 @@ elSlots.innerHTML = "";
     elSlots.innerHTML = `<div class="muted">Nema slobodnih termina za ovaj datum (za izabrani paket).</div>`;
   }
 
-  // mali hint ako firebase nije ready
+  // hint ako firebase nije ok
   if(!firebaseReady){
     const warn = document.createElement("div");
     warn.className = "tiny muted";
-    warn.style.marginTop = "10px";
-    warn.textContent = "Napomena: Firebase nije povezan (vidi Console). Slotovi su prikazani, ali upis u bazu neće raditi dok se Firebase ne sredi.";
+    warn.textContent = "Napomena: Firebase nije povezan (vidi Console). Slotovi su prikazani, ali upis u bazu neće raditi dok ne središ Rules/URL.";
     elSlots.appendChild(warn);
   }
 }
 
+// paket change
 elPkg.addEventListener("change", async ()=>{
   selectedTime = null;
   btnSend.disabled = true;
-  await renderSlots();
+  if(selected) await renderSlots();
   renderSummary();
 });
 
 // =====================
-// 7) Summary + reset
+// Summary + reset
 // =====================
 function renderSummary(){
   elSumDate.textContent = selected ? niceDate(selected.y,selected.m,selected.d) : "—";
@@ -283,14 +291,14 @@ btnReset.addEventListener("click", ()=>{
   selectedTime = null;
   btnSend.disabled = true;
   elInfo.textContent = "Izaberi datum.";
-  elSlots.innerHTML = `<div class="muted">Izaberi datum da vidiš slobodne termine.</div>`;
   document.querySelectorAll(".day--selected").forEach(x=>x.classList.remove("day--selected"));
   document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
   renderSummary();
+  renderSlotsPlaceholder();
 });
 
 // =====================
-// 8) Send request (upis + WhatsApp)
+// Send booking
 // =====================
 btnSend.addEventListener("click", async ()=>{
   if(!selected || selectedTime==null) return;
@@ -307,15 +315,15 @@ btnSend.addEventListener("click", async ()=>{
   const key = dateKey(selected.y, selected.m, selected.d);
   const dateText = niceDate(selected.y, selected.m, selected.d);
 
-  // Ako firebase nije spreman, ipak pošalji WA (ali bez upisa)
+  // ako nema firebase, samo WA
   if(!firebaseReady || !db){
     const msg = `Rezervacija ${dateText} Paket: ${packageName} Vreme: ${niceTime(selectedTime)}`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
-    alert("Poslat WhatsApp zahtev (Firebase nije povezan, nije upisano u bazu).");
+    alert("Poslat WhatsApp zahtev (Firebase nije povezan).");
     return;
   }
 
-  // re-check clash
+  // re-check
   const bookings = await getBookingsForDay(key);
   const end = selectedTime + duration;
   const clash = bookings.some(b => selectedTime < (b.time + b.duration) && end > b.time);
@@ -337,8 +345,8 @@ btnSend.addEventListener("click", async ()=>{
 
     const msg = `Rezervacija ${dateText} Paket: ${packageName} Vreme: ${niceTime(selectedTime)}`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
-
     alert("Termin rezervisan!");
+
     await renderSlots();
   }catch(e){
     console.error("DB write error:", e);
@@ -347,7 +355,7 @@ btnSend.addEventListener("click", async ()=>{
 });
 
 // =====================
-// 9) Admin (opciono, neće rušiti UI)
+// Admin
 // =====================
 const adminEmail = $("adminEmail");
 const adminPass  = $("adminPass");
@@ -392,7 +400,7 @@ async function loadAdmin(){
   }
 }
 
-adminLogin?.addEventListener("click", async ()=>{
+adminLogin.addEventListener("click", async ()=>{
   if(!firebaseReady || !auth){
     alert("Firebase nije povezan. Proveri config i Rules.");
     return;
@@ -409,4 +417,4 @@ adminLogin?.addEventListener("click", async ()=>{
   }
 });
 
-refreshAdmin?.addEventListener("click", loadAdmin);
+refreshAdmin.addEventListener("click", loadAdmin);
