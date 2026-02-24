@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <!-- IMPORTANT: cache bust -->
-  <link rel="stylesheet" href="style.css?v=7">
+  <!-- cache bust -->
+  <link rel="stylesheet" href="style.css?v=20">
 
   <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -22,7 +22,6 @@
   <nav class="nav">
     <div class="nav__inner">
       <a class="brand" href="#home">MobilnoPranje</a>
-
       <div class="nav__links">
         <a class="nav__link" href="#services">Usluge</a>
         <a class="nav__link" href="#prices">Cene</a>
@@ -144,6 +143,7 @@
     </div>
   </section>
 
+  <!-- BOOKING -->
   <section id="booking" class="section">
     <div class="section__head">
       <h2>Zakazivanje termina</h2>
@@ -151,6 +151,7 @@
     </div>
 
     <div class="booking">
+      <!-- Calendar -->
       <div class="panel">
         <div class="calTop">
           <button class="iconBtn" id="prevMonth" type="button">‹</button>
@@ -160,20 +161,29 @@
 
         <div class="dow" id="dow"></div>
         <div class="calGrid" id="calGrid"></div>
-
         <div class="note" id="selectedInfo">Izaberi datum.</div>
       </div>
 
+      <!-- Controls -->
       <div class="panel">
         <div class="row">
           <div>
-            <label class="label" for="pkg">Paket</label>
-            <div class="selectWrap">
-              <select id="pkg" class="input">
-                <option value="60">Basic (60 min)</option>
-                <option value="90">Standard (90 min)</option>
-                <option value="120">Premium (120 min)</option>
-              </select>
+            <label class="label">Paket</label>
+
+            <!-- Hidden real select (logic uses this) -->
+            <select id="pkg" class="sr-only" aria-hidden="true" tabindex="-1">
+              <option value="60" selected>Basic (60 min)</option>
+              <option value="90">Standard (90 min)</option>
+              <option value="120">Premium (120 min)</option>
+            </select>
+
+            <!-- Custom dropdown -->
+            <div class="dd" id="pkgDD">
+              <button class="dd__btn" id="pkgBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <span class="dd__value" id="pkgValue">Basic (60 min)</span>
+                <span class="dd__chev">▾</span>
+              </button>
+              <div class="dd__menu" id="pkgMenu" role="listbox" aria-label="Izaberi paket"></div>
             </div>
           </div>
 
@@ -211,10 +221,7 @@
   </section>
 
   <section id="admin" class="section section--alt">
-    <div class="section__head">
-      <h2>Admin</h2>
-    </div>
-
+    <div class="section__head"><h2>Admin</h2></div>
     <div class="admin">
       <div class="panel">
         <div class="row">
@@ -238,7 +245,6 @@
 
   <footer class="footer">© 2026 Mobilno Pranje</footer>
 
-  <!-- IMPORTANT: cache bust -->
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=20"></script>
 </body>
 </html>
