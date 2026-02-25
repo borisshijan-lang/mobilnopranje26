@@ -25,7 +25,7 @@ function withTimeout(promise, ms){
 }
 
 /* =========================
-   ✅ Smooth scroll (menu + logo)
+   Smooth scroll (menu + logo)
    ========================= */
 (function enableSmoothAnchors(){
   const NAV_OFFSET = 80;
@@ -59,7 +59,28 @@ function withTimeout(promise, ms){
 })();
 
 /* =========================
-   Firebase (ne ruši UI)
+   Focus/Blur helpers
+   ========================= */
+const focusOverlay = $("focusOverlay");
+
+function enableFocus(){
+  document.body.classList.add("focus-active");
+}
+function disableFocus(){
+  document.body.classList.remove("focus-active");
+}
+
+focusOverlay?.addEventListener("click", ()=>{
+  // klik van booking-a -> ugasi blur
+  disableFocus();
+});
+
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape") disableFocus();
+});
+
+/* =========================
+   Firebase
    ========================= */
 let db = null;
 let auth = null;
@@ -105,7 +126,7 @@ const elTitle = $("calTitle");
 const elDow   = $("dow");
 const elGrid  = $("calGrid");
 
-const elPkg   = $("pkg");         // hidden select (logic)
+const elPkg   = $("pkg");
 const ddRoot  = $("pkgDD");
 const ddBtn   = $("pkgBtn");
 const ddVal   = $("pkgValue");
@@ -130,13 +151,13 @@ const END_HOUR = 22;
 let view = new Date();
 view.setDate(1);
 
-let selected = null;      // {y,m,d}
+let selected = null;
 let selectedTime = null;
 
 const DOW = ["Pon","Uto","Sre","Čet","Pet","Sub","Ned"];
 
 /* =========================
-   Custom dropdown build
+   Dropdown
    ========================= */
 function buildPkgDropdown(){
   ddMenu.innerHTML = "";
@@ -178,24 +199,24 @@ function toggleDD(){
   if(ddRoot.classList.contains("dd--open")) closeDD();
   else openDD();
 }
-ddBtn.addEventListener("click", (e)=>{
+
+ddBtn?.addEventListener("click", (e)=>{
   e.preventDefault();
   toggleDD();
 });
+
 document.addEventListener("click", (e)=>{
-  if(!ddRoot.contains(e.target)) closeDD();
+  if(ddRoot && !ddRoot.contains(e.target)) closeDD();
 });
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape") closeDD();
 });
 
-/* ✅ helper: set package (used by dropdown + price cards click) */
 function setPackage(value){
   elPkg.value = String(value);
-
   ddVal.textContent = elPkg.options[elPkg.selectedIndex]?.text || "";
 
-  ddMenu.querySelectorAll(".dd__opt").forEach(btn=>{
+  ddMenu?.querySelectorAll(".dd__opt").forEach(btn=>{
     btn.setAttribute("aria-selected", btn.dataset.value === String(value) ? "true" : "false");
   });
 
@@ -206,7 +227,6 @@ function setPackage(value){
   if(selected) renderSlots();
 }
 
-/* ✅ helper: smooth scroll to booking with offset */
 function scrollToBooking(){
   const NAV_OFFSET = 80;
   const booking = document.querySelector("#booking");
@@ -215,13 +235,14 @@ function scrollToBooking(){
   window.scrollTo({ top: y, behavior: "smooth" });
 }
 
-/* ✅ click on price package -> set package + scroll to booking */
+/* ✅ click on price cards -> focus stays ON until time picked */
 document.querySelectorAll(".pkgCard[data-pkg]").forEach(card=>{
   card.style.cursor = "pointer";
   card.addEventListener("click", ()=>{
     const pkg = card.getAttribute("data-pkg");
     setPackage(pkg);
     scrollToBooking();
+    enableFocus(); // ✅ blur ostaje
   });
 });
 
@@ -304,11 +325,13 @@ elGrid.addEventListener("click", async (e)=>{
 
   elInfo.textContent = `Izabran datum: ${niceDate(y,m,d)}. Izaberi vreme.`;
   renderSummary();
+
+  // kada izabere datum, i dalje držimo fokus ON (ako je već upaljen)
   await renderSlots();
 });
 
 /* =========================
-   Slots
+   Slots (korak = trajanje paketa)
    ========================= */
 function updateSlotsMeta(text){ elSlotsMeta.textContent = text; }
 
@@ -343,7 +366,7 @@ async function renderSlots(){
   }
 
   const duration = parseInt(elPkg.value,10);
-  const step = duration; // ✅ korak = trajanje paketa
+  const step = duration;
   const key = dateKey(selected.y, selected.m, selected.d);
 
   const {bookings, source} = await getBookingsForDaySafe(key);
@@ -357,29 +380,32 @@ async function renderSlots(){
 
   for(let start = dayStart; start + duration <= dayEnd; start += step){
     const end = start + duration;
-
     const clash = bookings.some(b => start < (b.time + b.duration) && end > b.time);
 
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "slot";
-    b.textContent = niceTime(start);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "slot";
+    btn.textContent = niceTime(start);
 
     if(clash){
-      b.classList.add("slot--disabled");
-      b.disabled = true;
+      btn.classList.add("slot--disabled");
+      btn.disabled = true;
     } else {
       free++;
-      b.addEventListener("click", ()=>{
+      btn.addEventListener("click", ()=>{
         document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
-        b.classList.add("slot--selected");
+        btn.classList.add("slot--selected");
+
         selectedTime = start;
         btnSend.disabled = false;
         renderSummary();
+
+        // ✅ tek kad izabere vreme -> gasi blur
+        disableFocus();
       });
     }
 
-    elSlots.appendChild(b);
+    elSlots.appendChild(btn);
     created++;
   }
 
@@ -410,6 +436,7 @@ btnReset.addEventListener("click", ()=>{
   renderSummary();
   renderSlotsPlaceholder();
   updateSlotsMeta("—");
+  disableFocus(); // reset gasi blur
 });
 
 /* =========================
@@ -427,9 +454,9 @@ btnSend.addEventListener("click", async ()=>{
   const dateText = niceDate(selected.y, selected.m, selected.d);
 
   const msg =
-    `Zdravo, želim da zakažem termin \n` +
+    `Zdravo, želim da zakažem termin ✅\n` +
     `Datum: ${dateText}\n` +
-    `Vreme: ${niceTime}\n` +
+    `Vreme: ${niceTime(selectedTime)}\n` +
     `Paket: ${packageName}\n` +
     `Hvala!`;
 
