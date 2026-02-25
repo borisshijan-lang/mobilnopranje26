@@ -24,23 +24,27 @@ function withTimeout(promise, ms){
   ]);
 }
 
-/* =========================
-   Focus/Blur helpers
-   ========================= */
-const focusOverlay = $("focusOverlay");
+/* ===== Hero effects ===== */
+window.addEventListener("load", ()=> document.body.classList.add("loaded"));
+const hero = document.querySelector(".hero");
+window.addEventListener("scroll", ()=>{
+  const y = window.scrollY;
+  if(hero){
+    if(y > 80) hero.classList.add("scrolled");
+    else hero.classList.remove("scrolled");
+  }
+});
 
+/* ===== Focus/Blur helpers ===== */
+const focusOverlay = $("focusOverlay");
 function enableFocus(){ document.body.classList.add("focus-active"); }
 function disableFocus(){ document.body.classList.remove("focus-active"); }
-
 focusOverlay?.addEventListener("click", disableFocus);
 document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") disableFocus(); });
 
-/* =========================
-   Smooth scroll + GASENJE BLUR-a kad se ide na drugi deo
-   ========================= */
+/* ===== Smooth scroll + ugasi blur kad ideš na druge sekcije ===== */
 (function enableSmoothAnchors(){
   const NAV_OFFSET = 80;
-
   function smoothTo(el){
     const y = el.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET;
     window.scrollTo({ top: y, behavior: "smooth" });
@@ -56,7 +60,6 @@ document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") disableFocus(
     const target = document.querySelector(hash);
     if(!target) return;
 
-    // ✅ ako ideš na drugi deo sajta - ugasi blur
     if(hash !== "#booking") disableFocus();
 
     e.preventDefault();
@@ -72,11 +75,8 @@ document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") disableFocus(
   });
 })();
 
-/* =========================
-   Firebase
-   ========================= */
+/* ===== Firebase (privatno: samo upis zahteva) ===== */
 let db = null;
-let auth = null;
 let firebaseReady = false;
 
 try{
@@ -92,16 +92,13 @@ try{
 
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
-  auth = firebase.auth();
   firebaseReady = true;
 }catch(e){
   console.error("Firebase init error:", e);
   firebaseReady = false;
 }
 
-/* =========================
-   FAQ
-   ========================= */
+/* ===== FAQ ===== */
 document.querySelectorAll("[data-faq]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     const ans = btn.nextElementSibling;
@@ -112,9 +109,7 @@ document.querySelectorAll("[data-faq]").forEach(btn=>{
   });
 });
 
-/* =========================
-   Booking elements
-   ========================= */
+/* ===== Booking elements ===== */
 const elTitle = $("calTitle");
 const elDow   = $("dow");
 const elGrid  = $("calGrid");
@@ -125,7 +120,7 @@ const ddBtn   = $("pkgBtn");
 const ddVal   = $("pkgValue");
 const ddMenu  = $("pkgMenu");
 
-const elWhats = $("whats");
+const elPhone = $("phone");
 const elSlots = $("slots");
 const elInfo  = $("selectedInfo");
 const elSumDate = $("sumDate");
@@ -134,6 +129,7 @@ const elSumPkg  = $("sumPkg");
 const elSlotsMeta = $("slotsMeta");
 const btnSend = $("sendReq");
 const btnReset = $("reset");
+const statusLine = $("statusLine");
 
 $("prevMonth")?.addEventListener("click", ()=>viewMonth(-1));
 $("nextMonth")?.addEventListener("click", ()=>viewMonth(1));
@@ -149,9 +145,7 @@ let selectedTime = null;
 
 const DOW = ["Pon","Uto","Sre","Čet","Pet","Sub","Ned"];
 
-/* =========================
-   Dropdown
-   ========================= */
+/* ===== Dropdown ===== */
 function buildPkgDropdown(){
   ddMenu.innerHTML = "";
   const opts = Array.from(elPkg.options);
@@ -192,18 +186,9 @@ function toggleDD(){
   if(ddRoot.classList.contains("dd--open")) closeDD();
   else openDD();
 }
-
-ddBtn?.addEventListener("click", (e)=>{
-  e.preventDefault();
-  toggleDD();
-});
-
-document.addEventListener("click", (e)=>{
-  if(ddRoot && !ddRoot.contains(e.target)) closeDD();
-});
-document.addEventListener("keydown", (e)=>{
-  if(e.key === "Escape") closeDD();
-});
+ddBtn?.addEventListener("click", (e)=>{ e.preventDefault(); toggleDD(); });
+document.addEventListener("click", (e)=>{ if(ddRoot && !ddRoot.contains(e.target)) closeDD(); });
+document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closeDD(); });
 
 function setPackage(value){
   elPkg.value = String(value);
@@ -219,6 +204,7 @@ function setPackage(value){
   if(selected) renderSlots();
 }
 
+/* ===== Cards -> booking + fokus ===== */
 function scrollToBooking(){
   const NAV_OFFSET = 80;
   const booking = document.querySelector("#booking");
@@ -227,7 +213,6 @@ function scrollToBooking(){
   window.scrollTo({ top: y, behavior: "smooth" });
 }
 
-/* Klik na paket -> booking + fokus */
 document.querySelectorAll(".pkgCard[data-pkg]").forEach(card=>{
   card.style.cursor = "pointer";
   card.addEventListener("click", ()=>{
@@ -238,19 +223,16 @@ document.querySelectorAll(".pkgCard[data-pkg]").forEach(card=>{
   });
 });
 
-/* =========================
-   Init
-   ========================= */
+/* ===== Init ===== */
 buildPkgDropdown();
 renderDow();
 renderCalendar();
 renderSummary();
 renderSlotsPlaceholder();
 updateSlotsMeta("—");
+statusLine.textContent = firebaseReady ? "" : "Napomena: trenutno nije aktivna baza (Firebase).";
 
-/* =========================
-   Calendar
-   ========================= */
+/* ===== Calendar ===== */
 function renderDow(){
   elDow.innerHTML = "";
   DOW.forEach(name=>{
@@ -259,12 +241,10 @@ function renderDow(){
     elDow.appendChild(div);
   });
 }
-
 function viewMonth(step){
   view.setMonth(view.getMonth()+step);
   renderCalendar();
 }
-
 function renderCalendar(){
   elTitle.textContent = monthTitle(view);
   elGrid.innerHTML = "";
@@ -320,9 +300,7 @@ elGrid.addEventListener("click", async (e)=>{
   await renderSlots();
 });
 
-/* =========================
-   Slots (korak = trajanje paketa)
-   ========================= */
+/* ===== Slots (korak = trajanje paketa) ===== */
 function updateSlotsMeta(text){ elSlotsMeta.textContent = text; }
 
 function renderSlotsPlaceholder(){
@@ -334,13 +312,13 @@ async function getBookingsForDaySafe(key){
   if(!firebaseReady || !db) return {bookings:[], source:"offline"};
 
   try{
-    const readPromise = db.ref("bookings").orderByChild("dateKey").equalTo(key).once("value");
+    const readPromise = db.ref("requests").orderByChild("dateKey").equalTo(key).once("value");
     const snap = await withTimeout(readPromise, 2000);
     const arr = [];
     snap.forEach(s => arr.push(s.val()));
     return {bookings: arr, source:"firebase"};
   }catch(e){
-    console.warn("Bookings fetch failed:", e.message);
+    console.warn("Fetch failed:", e.message);
     return {bookings: [], source:"timeout"};
   }
 }
@@ -389,7 +367,7 @@ async function renderSlots(){
         btnSend.disabled = false;
         renderSummary();
 
-        // ✅ čim izabere vreme -> ugasi blur
+        // blur nestaje kad izabere vreme
         disableFocus();
       });
     }
@@ -406,9 +384,7 @@ async function renderSlots(){
   }
 }
 
-/* =========================
-   Summary + reset
-   ========================= */
+/* ===== Summary + reset ===== */
 function renderSummary(){
   elSumDate.textContent = selected ? niceDate(selected.y,selected.m,selected.d) : "—";
   elSumTime.textContent = (selectedTime!=null) ? niceTime(selectedTime) : "—";
@@ -425,51 +401,63 @@ btnReset.addEventListener("click", ()=>{
   renderSummary();
   renderSlotsPlaceholder();
   updateSlotsMeta("—");
+  statusLine.textContent = "";
   disableFocus();
 });
 
-/* =========================
-   WhatsApp + DB write
-   ========================= */
-btnSend.addEventListener("click", async ()=>{
-  if(!selected || selectedTime==null) return;
+/* ===== Submit request (bez WA / bez tvog broja) ===== */
+function isValidPhone(s){
+  const t = (s || "").trim();
+  if(t.length < 6) return false;
+  // dozvoli brojeve, razmake, +, -, /
+  return /^[0-9+\-\/\s()]+$/.test(t);
+}
 
-  const phone = (elWhats.value || "").trim();
-  if(!phone){ alert("Upiši WhatsApp broj (npr. 3816...)"); return; }
+btnSend.addEventListener("click", async ()=>{
+  statusLine.textContent = "";
+
+  if(!selected || selectedTime==null){
+    statusLine.textContent = "Izaberi datum i vreme.";
+    return;
+  }
+
+  const phone = (elPhone.value || "").trim();
+  if(!isValidPhone(phone)){
+    statusLine.textContent = "Unesi ispravan kontakt telefon.";
+    return;
+  }
+
+  if(!firebaseReady || !db){
+    statusLine.textContent = "Trenutno nije moguće poslati zahtev (baza nije aktivna).";
+    return;
+  }
 
   const duration = parseInt(elPkg.value,10);
   const packageName = elPkg.options[elPkg.selectedIndex].text;
   const key = dateKey(selected.y, selected.m, selected.d);
   const dateText = niceDate(selected.y, selected.m, selected.d);
 
-  const msg =
-    `Zdravo, želim da zakažem termin \n` +
-    `Grad: Beograd\n` +
-    `Datum: ${dateText}\n` +
-    `Vreme: ${niceTime(selectedTime)}\n` +
-    `Paket: ${packageName}\n` +
-    `Hvala!`;
-
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
-
-  if(!firebaseReady || !db){
-    alert("Poslat WhatsApp zahtev. (Firebase nije povezan — nije upisano u bazu)");
-    return;
-  }
+  btnSend.disabled = true;
+  statusLine.textContent = "Slanje zahteva...";
 
   try{
-    await db.ref("bookings").push({
+    await db.ref("requests").push({
       dateKey: key,
       dateText,
       time: selectedTime,
       duration,
       package: packageName,
+      phone: phone,
+      status: "new",
       createdAt: Date.now()
     });
-    alert("Termin upisan u bazu + poslat WhatsApp.");
+
+    statusLine.textContent = "✅ Zahtev poslat! Uskoro dobijaš potvrdu termina.";
+    // refresh slotova (da termin postane zauzet)
     await renderSlots();
   }catch(e){
     console.error("DB write error:", e);
-    alert("Poslat WhatsApp, ali upis u bazu nije uspeo (proveri Rules).");
+    statusLine.textContent = "Greška pri slanju zahteva. Pokušaj ponovo.";
+    btnSend.disabled = false;
   }
 });
