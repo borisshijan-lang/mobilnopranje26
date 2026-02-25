@@ -9,20 +9,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=80">
+  <link rel="stylesheet" href="style.css?v=900">
 
-  <!-- Firebase v8 (kompatibilno sa statičnim sajtom) -->
+  <!-- Firebase v8 (radi na GitHub Pages bez bundlera) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
-<body>
 
-  <!-- Blur overlay (fokus na booking) -->
+<body>
+  <!-- blur overlay (fokus booking) -->
   <div id="focusOverlay" aria-hidden="true"></div>
 
   <nav class="nav">
     <div class="nav__inner">
       <a class="brand" href="#home">MobilnoPranje</a>
+
       <div class="nav__links">
         <a class="nav__link" href="#services">Usluge</a>
         <a class="nav__link" href="#prices">Cene</a>
@@ -39,6 +40,7 @@
       <span class="hero__badge">Beograd • Radno vreme: 17:00 – 22:00 • Nedelja je radna</span>
       <h1>Mobilno pranje vozila na tvojoj adresi</h1>
       <p>Izaberi paket, datum i vreme — pošalji zahtev za termin.</p>
+
       <div class="hero__actions">
         <a class="btn btn--primary" href="#booking">Zakaži termin</a>
         <a class="btn btn--ghost" href="#prices">Pogledaj cene</a>
@@ -130,7 +132,7 @@
 
       <article class="card card--hover">
         <span class="pill">Detalji</span>
-        <h3>Detalji</h3>
+        <h3>Detaljing</h3>
         <ul class="list">
           <li>Pragovi / ivice / otvori</li>
           <li>Teže dostupna mesta</li>
@@ -141,11 +143,13 @@
     </div>
   </section>
 
+  <!-- GALERIJA -->
   <section id="gallery" class="section">
     <div class="section__head">
       <h2>Galerija</h2>
       <p class="muted">Primeri rada.</p>
     </div>
+
     <div class="gallery">
       <img src="https://images.pexels.com/photos/3354648/pexels-photo-3354648.jpeg" alt="Galerija 1">
       <img src="https://images.pexels.com/photos/372810/pexels-photo-372810.jpeg" alt="Galerija 2">
@@ -154,6 +158,7 @@
     </div>
   </section>
 
+  <!-- FAQ -->
   <section id="faq" class="section section--alt">
     <div class="section__head">
       <h2>FAQ</h2>
@@ -171,6 +176,9 @@
 
       <button class="faq__q" data-faq>Da li moram unapred da platim? <span class="faq__icon">+</span></button>
       <div class="faq__a">Ne. Zahtev se šalje, a potvrda termina ide naknadno.</div>
+
+      <button class="faq__q" data-faq>Šta mi je potrebno na lokaciji? <span class="faq__icon">+</span></button>
+      <div class="faq__a">Samo pristup vozilu i dogovor oko tačne adrese i vremena. Sve ostalo nosimo mi.</div>
     </div>
   </section>
 
@@ -182,6 +190,7 @@
     </div>
 
     <div class="booking">
+      <!-- KALENDAR -->
       <div class="panel">
         <div class="calTop">
           <button class="iconBtn" id="prevMonth" type="button">‹</button>
@@ -194,6 +203,7 @@
         <div class="note" id="selectedInfo">Izaberi datum.</div>
       </div>
 
+      <!-- DESNI PANEL -->
       <div class="panel">
         <div class="row">
           <div>
@@ -217,7 +227,7 @@
           <div>
             <label class="label" for="phone">Kontakt telefon</label>
             <input id="phone" class="input" placeholder="npr. 06x/xxx-xxxx" autocomplete="tel"/>
-            <div class="tiny muted">Telefon služi samo za potvrdu termina. Ne prikazujemo nikakav naš broj na sajtu.</div>
+            <div class="tiny muted">Telefon služi samo za potvrdu termina. Na sajtu ne prikazujemo nikakav naš broj.</div>
           </div>
         </div>
 
@@ -250,6 +260,6 @@
 
   <footer class="footer">© 2026 Mobilno Pranje</footer>
 
-  <script src="script.js?v=80"></script>
+  <script src="script.js?v=900"></script>
 </body>
 </html>
