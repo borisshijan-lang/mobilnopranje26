@@ -25,10 +25,10 @@ function withTimeout(promise, ms){
 }
 
 /* =========================
-   ✅ SMOOTH SCROLL (MENU + LOGO)
+   ✅ Smooth scroll (menu + logo)
    ========================= */
 (function enableSmoothAnchors(){
-  const NAV_OFFSET = 80; // visina navbara (da naslov ne uđe ispod nav-a)
+  const NAV_OFFSET = 80;
 
   function smoothTo(el){
     const y = el.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET;
@@ -46,20 +46,14 @@ function withTimeout(promise, ms){
     if(!target) return;
 
     e.preventDefault();
-
-    // update URL hash bez skoka
     history.pushState(null, "", hash);
-
     smoothTo(target);
   });
 
-  // Ako se stranica otvori sa hashom (npr. /#gallery) -> smooth scroll posle load
   window.addEventListener("load", ()=>{
     if(location.hash){
       const target = document.querySelector(location.hash);
-      if(target){
-        setTimeout(()=>smoothTo(target), 60);
-      }
+      if(target) setTimeout(()=>smoothTo(target), 60);
     }
   });
 })();
@@ -132,7 +126,6 @@ $("nextMonth")?.addEventListener("click", ()=>viewMonth(1));
 
 const START_HOUR = 17;
 const END_HOUR = 22;
-const STEP_MIN = 30;
 
 let view = new Date();
 view.setDate(1);
@@ -146,22 +139,8 @@ const DOW = ["Pon","Uto","Sre","Čet","Pet","Sub","Ned"];
    Custom dropdown build
    ========================= */
 function buildPkgDropdown(){
-  if(!elPkg || !ddMenu || !ddVal) return;
-
   ddMenu.innerHTML = "";
   const opts = Array.from(elPkg.options);
-
-  const setSelected = (value)=>{
-    elPkg.value = value;
-    const text = elPkg.options[elPkg.selectedIndex]?.text || "";
-    ddVal.textContent = text;
-
-    selectedTime = null;
-    btnSend.disabled = true;
-
-    renderSummary();
-    if(selected) renderSlots();
-  };
 
   opts.forEach((o)=>{
     const btn = document.createElement("button");
@@ -176,13 +155,7 @@ function buildPkgDropdown(){
     `;
 
     btn.addEventListener("click", ()=>{
-      opts.forEach(x=>x.selected=false);
-      o.selected = true;
-
-      ddMenu.querySelectorAll(".dd__opt").forEach(x=>x.setAttribute("aria-selected","false"));
-      btn.setAttribute("aria-selected","true");
-
-      setSelected(o.value);
+      setPackage(o.value);
       closeDD();
     });
 
@@ -205,17 +178,51 @@ function toggleDD(){
   if(ddRoot.classList.contains("dd--open")) closeDD();
   else openDD();
 }
-
-ddBtn?.addEventListener("click", (e)=>{
+ddBtn.addEventListener("click", (e)=>{
   e.preventDefault();
   toggleDD();
 });
-
 document.addEventListener("click", (e)=>{
-  if(ddRoot && !ddRoot.contains(e.target)) closeDD();
+  if(!ddRoot.contains(e.target)) closeDD();
 });
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape") closeDD();
+});
+
+/* ✅ helper: set package (used by dropdown + price cards click) */
+function setPackage(value){
+  elPkg.value = String(value);
+
+  ddVal.textContent = elPkg.options[elPkg.selectedIndex]?.text || "";
+
+  ddMenu.querySelectorAll(".dd__opt").forEach(btn=>{
+    btn.setAttribute("aria-selected", btn.dataset.value === String(value) ? "true" : "false");
+  });
+
+  selectedTime = null;
+  btnSend.disabled = true;
+
+  renderSummary();
+  if(selected) renderSlots();
+}
+
+/* ✅ helper: smooth scroll to booking with offset */
+function scrollToBooking(){
+  const NAV_OFFSET = 80;
+  const booking = document.querySelector("#booking");
+  if(!booking) return;
+  const y = booking.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET;
+  window.scrollTo({ top: y, behavior: "smooth" });
+}
+
+/* ✅ click on price package -> set package + scroll to booking */
+document.querySelectorAll(".pkgCard[data-pkg]").forEach(card=>{
+  card.style.cursor = "pointer";
+  card.addEventListener("click", ()=>{
+    const pkg = card.getAttribute("data-pkg");
+    setPackage(pkg);
+    scrollToBooking();
+  });
 });
 
 /* =========================
@@ -232,7 +239,6 @@ updateSlotsMeta("—");
    Calendar
    ========================= */
 function renderDow(){
-  if(!elDow) return;
   elDow.innerHTML = "";
   DOW.forEach(name=>{
     const div = document.createElement("div");
@@ -247,7 +253,6 @@ function viewMonth(step){
 }
 
 function renderCalendar(){
-  if(!elTitle || !elGrid) return;
   elTitle.textContent = monthTitle(view);
   elGrid.innerHTML = "";
 
@@ -281,7 +286,7 @@ function renderCalendar(){
   }
 }
 
-elGrid?.addEventListener("click", async (e)=>{
+elGrid.addEventListener("click", async (e)=>{
   const cell = e.target.closest(".day");
   if(!cell) return;
   if(cell.classList.contains("day--empty")) return;
@@ -297,7 +302,7 @@ elGrid?.addEventListener("click", async (e)=>{
   document.querySelectorAll(".day--selected").forEach(x=>x.classList.remove("day--selected"));
   cell.classList.add("day--selected");
 
-  if(elInfo) elInfo.textContent = `Izabran datum: ${niceDate(y,m,d)}. Izaberi vreme.`;
+  elInfo.textContent = `Izabran datum: ${niceDate(y,m,d)}. Izaberi vreme.`;
   renderSummary();
   await renderSlots();
 });
@@ -305,12 +310,9 @@ elGrid?.addEventListener("click", async (e)=>{
 /* =========================
    Slots
    ========================= */
-function updateSlotsMeta(text){
-  if(elSlotsMeta) elSlotsMeta.textContent = text;
-}
+function updateSlotsMeta(text){ elSlotsMeta.textContent = text; }
 
 function renderSlotsPlaceholder(){
-  if(!elSlots) return;
   elSlots.innerHTML = `<div class="muted">Izaberi datum da vidiš slobodne termine.</div>`;
   btnSend.disabled = true;
 }
@@ -331,9 +333,6 @@ async function getBookingsForDaySafe(key){
 }
 
 async function renderSlots(){
-  if(!elSlots){
-    return;
-  }
   elSlots.innerHTML = `<div class="muted">Učitavanje termina...</div>`;
   btnSend.disabled = true;
 
@@ -344,6 +343,7 @@ async function renderSlots(){
   }
 
   const duration = parseInt(elPkg.value,10);
+  const step = duration; // ✅ korak = trajanje paketa
   const key = dateKey(selected.y, selected.m, selected.d);
 
   const {bookings, source} = await getBookingsForDaySafe(key);
@@ -352,36 +352,35 @@ async function renderSlots(){
   let created = 0;
   let free = 0;
 
-  for(let h=START_HOUR; h<END_HOUR; h++){
-    for(let mm of [0, STEP_MIN]){
-      const start = h*60 + mm;
-      const end = start + duration;
-      if(end > END_HOUR*60) continue;
+  const dayStart = START_HOUR * 60;
+  const dayEnd = END_HOUR * 60;
 
-      const clash = bookings.some(b => start < (b.time + b.duration) && end > b.time);
+  for(let start = dayStart; start + duration <= dayEnd; start += step){
+    const end = start + duration;
 
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "slot";
-      b.textContent = niceTime(start);
+    const clash = bookings.some(b => start < (b.time + b.duration) && end > b.time);
 
-      if(clash){
-        b.classList.add("slot--disabled");
-        b.disabled = true;
-      } else {
-        free++;
-        b.addEventListener("click", ()=>{
-          document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
-          b.classList.add("slot--selected");
-          selectedTime = start;
-          btnSend.disabled = false;
-          renderSummary();
-        });
-      }
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "slot";
+    b.textContent = niceTime(start);
 
-      elSlots.appendChild(b);
-      created++;
+    if(clash){
+      b.classList.add("slot--disabled");
+      b.disabled = true;
+    } else {
+      free++;
+      b.addEventListener("click", ()=>{
+        document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
+        b.classList.add("slot--selected");
+        selectedTime = start;
+        btnSend.disabled = false;
+        renderSummary();
+      });
     }
+
+    elSlots.appendChild(b);
+    created++;
   }
 
   const sourceText = (source==="firebase") ? "sinhronizovano" : "offline prikaz";
@@ -396,29 +395,27 @@ async function renderSlots(){
    Summary + reset
    ========================= */
 function renderSummary(){
-  if(elSumDate) elSumDate.textContent = selected ? niceDate(selected.y,selected.m,selected.d) : "—";
-  if(elSumTime) elSumTime.textContent = (selectedTime!=null) ? niceTime(selectedTime) : "—";
-  if(elSumPkg)  elSumPkg.textContent  = elPkg?.options[elPkg.selectedIndex]?.text || "—";
+  elSumDate.textContent = selected ? niceDate(selected.y,selected.m,selected.d) : "—";
+  elSumTime.textContent = (selectedTime!=null) ? niceTime(selectedTime) : "—";
+  elSumPkg.textContent  = elPkg.options[elPkg.selectedIndex]?.text || "—";
 }
 
-btnReset?.addEventListener("click", ()=>{
+btnReset.addEventListener("click", ()=>{
   selected = null;
   selectedTime = null;
   btnSend.disabled = true;
-
-  if(elInfo) elInfo.textContent = "Izaberi datum.";
+  elInfo.textContent = "Izaberi datum.";
   document.querySelectorAll(".day--selected").forEach(x=>x.classList.remove("day--selected"));
   document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
-
   renderSummary();
   renderSlotsPlaceholder();
   updateSlotsMeta("—");
 });
 
 /* =========================
-   Send request
+   WhatsApp + DB write
    ========================= */
-btnSend?.addEventListener("click", async ()=>{
+btnSend.addEventListener("click", async ()=>{
   if(!selected || selectedTime==null) return;
 
   const phone = (elWhats.value || "").trim();
@@ -430,11 +427,12 @@ btnSend?.addEventListener("click", async ()=>{
   const dateText = niceDate(selected.y, selected.m, selected.d);
 
   const msg =
-  `Zdravo, želim da zakažem termin ✅\n` +
-  `Datum: ${dateText}\n` +
-  `Vreme: ${niceTime(selectedTime)}\n` +
-  `Paket: ${packageName}\n` +
-  `Hvala!`;
+    `Zdravo, želim da zakažem termin ✅\n` +
+    `Datum: ${dateText}\n` +
+    `Vreme: ${niceTime(selectedTime)}\n` +
+    `Paket: ${packageName}\n` +
+    `Hvala!`;
+
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
 
   if(!firebaseReady || !db){
