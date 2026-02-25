@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=40">
+  <link rel="stylesheet" href="style.css?v=50">
 
   <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -18,7 +18,7 @@
 </head>
 <body>
 
-  <!-- ✅ BLUR OVERLAY (mora da postoji) -->
+  <!-- ✅ BLUR OVERLAY -->
   <div id="focusOverlay" aria-hidden="true"></div>
 
   <nav class="nav">
@@ -38,7 +38,7 @@
   <header id="home" class="hero">
     <div class="hero__overlay"></div>
     <div class="hero__content">
-      <span class="hero__badge">Radno vreme: 17:00 – 22:00</span>
+      <span class="hero__badge">Beograd • Radno vreme: 17:00 – 22:00</span>
       <h1>Mobilno pranje vozila na tvojoj adresi</h1>
       <p>Rezerviši termin za 15 sekundi — izaberi paket, datum i vreme.</p>
       <div class="hero__actions">
@@ -48,7 +48,7 @@
     </div>
   </header>
 
-  <!-- CENE (klik -> booking + izabere paket) -->
+  <!-- CENE -->
   <section id="prices" class="section">
     <div class="section__head">
       <h2>Cene</h2>
@@ -100,7 +100,7 @@
     </div>
   </section>
 
-  <!-- USLUGE (bez cena) -->
+  <!-- USLUGE -->
   <section id="services" class="section section--alt">
     <div class="section__head">
       <h2>Usluge</h2>
@@ -132,7 +132,7 @@
 
       <article class="card card--hover">
         <span class="pill">Detalji</span>
-        <h3>Detalji</h3>
+        <h3>Detaljing</h3>
         <ul class="list">
           <li>Pragovi / ivice / otvori</li>
           <li>Teže dostupna mesta</li>
@@ -207,7 +207,7 @@
               <option value="120">Premium (120 min)</option>
             </select>
 
-            <div class="dd" id="pkgDD">
+            <div class="dd dd--big" id="pkgDD">
               <button class="dd__btn" id="pkgBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                 <span class="dd__value" id="pkgValue">Basic (60 min)</span>
                 <span class="dd__chev">▾</span>
@@ -274,6 +274,6 @@
 
   <footer class="footer">© 2026 Mobilno Pranje</footer>
 
-  <script src="script.js?v=40"></script>
+  <script src="script.js?v=50"></script>
 </body>
 </html>
