@@ -427,9 +427,9 @@ btnSend.addEventListener("click", async ()=>{
   const dateText = niceDate(selected.y, selected.m, selected.d);
 
   const msg =
-    `Zdravo, želim da zakažem termin ✅\n` +
+    `Zdravo, želim da zakažem termin \n` +
     `Datum: ${dateText}\n` +
-    `Vreme: ${niceTime(selectedTime)}\n` +
+    `Vreme: ${niceTime}\n` +
     `Paket: ${packageName}\n` +
     `Hvala!`;
 
