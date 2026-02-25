@@ -121,16 +121,11 @@ a{color:inherit}
   box-shadow:0 10px 30px rgba(0,0,0,.25);
   transition: .18s ease;
 }
-
-/* ✅ hover efekat za Cene/ Usluge */
 .card--hover:hover{
   transform: translateY(-6px) scale(1.02);
   border-color: rgba(0,194,255,.30);
   box-shadow: 0 18px 48px rgba(0,194,255,.10), 0 18px 48px rgba(0,0,0,.35);
 }
-
-/* ❌ nema vise stalnog highlighta */
-.card--highlight{border-color: var(--line);} /* zadržano da ne pukne HTML ako negde ostane */
 
 .pill{
   display:inline-block;
