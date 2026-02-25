@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=30">
+  <link rel="stylesheet" href="style.css?v=40">
 
   <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -17,8 +17,10 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 </head>
 <body>
-<div id="focusOverlay"></div>
-  
+
+  <!-- ✅ BLUR OVERLAY (mora da postoji) -->
+  <div id="focusOverlay" aria-hidden="true"></div>
+
   <nav class="nav">
     <div class="nav__inner">
       <a class="brand" href="#home">MobilnoPranje</a>
@@ -46,7 +48,7 @@
     </div>
   </header>
 
-  <!-- ✅ CENE (klikabilne kartice koje vode na booking + biraju paket) -->
+  <!-- CENE (klik -> booking + izabere paket) -->
   <section id="prices" class="section">
     <div class="section__head">
       <h2>Cene</h2>
@@ -98,7 +100,7 @@
     </div>
   </section>
 
-  <!-- ✅ USLUGE (bez cena) -->
+  <!-- USLUGE (bez cena) -->
   <section id="services" class="section section--alt">
     <div class="section__head">
       <h2>Usluge</h2>
@@ -163,14 +165,14 @@
       <button class="faq__q" data-faq>Da li dolazite na adresu? <span class="faq__icon">+</span></button>
       <div class="faq__a">Da, dolazimo na vašu lokaciju u dogovorenom terminu.</div>
 
-      <button class="faq__q" data-faq>Da li klijent ima neku obavezu? <span class="faq__icon">+</span></button>
-      <div class="faq__a">Da, klijent je u obavezi da nam obezbedi prostor za rad.</div>
-      
       <button class="faq__q" data-faq>Koliko traje pranje? <span class="faq__icon">+</span></button>
       <div class="faq__a">Basic 60 min, Standard 90 min, Premium 120 min.</div>
 
+      <button class="faq__q" data-faq>Da li radite nedeljom? <span class="faq__icon">+</span></button>
+      <div class="faq__a">Da — radno vreme je 17:00–22:00 (nedelja je radna).</div>
+
       <button class="faq__q" data-faq>Kako se vrši plaćanje? <span class="faq__icon">+</span></button>
-      <div class="faq__a">Plaćanje po završetku usluge (gotovina ili putem bankovnog računa).</div>
+      <div class="faq__a">Plaćanje po završetku usluge (gotovina ili dogovor).</div>
     </div>
   </section>
 
@@ -199,14 +201,12 @@
           <div>
             <label class="label">Paket</label>
 
-            <!-- hidden real select -->
             <select id="pkg" class="sr-only" aria-hidden="true" tabindex="-1">
               <option value="60" selected>Basic (60 min)</option>
               <option value="90">Standard (90 min)</option>
               <option value="120">Premium (120 min)</option>
             </select>
 
-            <!-- custom dropdown -->
             <div class="dd" id="pkgDD">
               <button class="dd__btn" id="pkgBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                 <span class="dd__value" id="pkgValue">Basic (60 min)</span>
@@ -274,6 +274,6 @@
 
   <footer class="footer">© 2026 Mobilno Pranje</footer>
 
-  <script src="script.js?v=31"></script>
+  <script src="script.js?v=40"></script>
 </body>
 </html>
