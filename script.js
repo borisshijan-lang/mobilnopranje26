@@ -25,7 +25,18 @@ function withTimeout(promise, ms){
 }
 
 /* =========================
-   Smooth scroll (menu + logo)
+   Focus/Blur helpers
+   ========================= */
+const focusOverlay = $("focusOverlay");
+
+function enableFocus(){ document.body.classList.add("focus-active"); }
+function disableFocus(){ document.body.classList.remove("focus-active"); }
+
+focusOverlay?.addEventListener("click", disableFocus);
+document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") disableFocus(); });
+
+/* =========================
+   Smooth scroll + GASENJE BLUR-a kad se ide na drugi deo
    ========================= */
 (function enableSmoothAnchors(){
   const NAV_OFFSET = 80;
@@ -45,6 +56,9 @@ function withTimeout(promise, ms){
     const target = document.querySelector(hash);
     if(!target) return;
 
+    // ✅ ako ideš na drugi deo sajta - ugasi blur
+    if(hash !== "#booking") disableFocus();
+
     e.preventDefault();
     history.pushState(null, "", hash);
     smoothTo(target);
@@ -57,27 +71,6 @@ function withTimeout(promise, ms){
     }
   });
 })();
-
-/* =========================
-   Focus/Blur helpers
-   ========================= */
-const focusOverlay = $("focusOverlay");
-
-function enableFocus(){
-  document.body.classList.add("focus-active");
-}
-function disableFocus(){
-  document.body.classList.remove("focus-active");
-}
-
-focusOverlay?.addEventListener("click", ()=>{
-  // klik van booking-a -> ugasi blur
-  disableFocus();
-});
-
-document.addEventListener("keydown", (e)=>{
-  if(e.key === "Escape") disableFocus();
-});
 
 /* =========================
    Firebase
@@ -222,7 +215,6 @@ function setPackage(value){
 
   selectedTime = null;
   btnSend.disabled = true;
-
   renderSummary();
   if(selected) renderSlots();
 }
@@ -235,14 +227,14 @@ function scrollToBooking(){
   window.scrollTo({ top: y, behavior: "smooth" });
 }
 
-/* ✅ click on price cards -> focus stays ON until time picked */
+/* Klik na paket -> booking + fokus */
 document.querySelectorAll(".pkgCard[data-pkg]").forEach(card=>{
   card.style.cursor = "pointer";
   card.addEventListener("click", ()=>{
     const pkg = card.getAttribute("data-pkg");
     setPackage(pkg);
     scrollToBooking();
-    enableFocus(); // ✅ blur ostaje
+    enableFocus();
   });
 });
 
@@ -325,8 +317,6 @@ elGrid.addEventListener("click", async (e)=>{
 
   elInfo.textContent = `Izabran datum: ${niceDate(y,m,d)}. Izaberi vreme.`;
   renderSummary();
-
-  // kada izabere datum, i dalje držimo fokus ON (ako je već upaljen)
   await renderSlots();
 });
 
@@ -395,12 +385,11 @@ async function renderSlots(){
       btn.addEventListener("click", ()=>{
         document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
         btn.classList.add("slot--selected");
-
         selectedTime = start;
         btnSend.disabled = false;
         renderSummary();
 
-        // ✅ tek kad izabere vreme -> gasi blur
+        // ✅ čim izabere vreme -> ugasi blur
         disableFocus();
       });
     }
@@ -436,7 +425,7 @@ btnReset.addEventListener("click", ()=>{
   renderSummary();
   renderSlotsPlaceholder();
   updateSlotsMeta("—");
-  disableFocus(); // reset gasi blur
+  disableFocus();
 });
 
 /* =========================
@@ -454,7 +443,8 @@ btnSend.addEventListener("click", async ()=>{
   const dateText = niceDate(selected.y, selected.m, selected.d);
 
   const msg =
-    `Zdravo, želim da zakažem termin ✅\n` +
+    `Zdravo, želim da zakažem termin \n` +
+    `Grad: Beograd\n` +
     `Datum: ${dateText}\n` +
     `Vreme: ${niceTime(selectedTime)}\n` +
     `Paket: ${packageName}\n` +
