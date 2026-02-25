@@ -9,8 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=21">
+  <link rel="stylesheet" href="style.css?v=30">
 
+  <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -44,15 +45,15 @@
     </div>
   </header>
 
-  <!-- ✅ CENE (izgled kao stari services) -->
+  <!-- ✅ CENE (klikabilne kartice koje vode na booking + biraju paket) -->
   <section id="prices" class="section">
     <div class="section__head">
       <h2>Cene</h2>
-      <p class="muted">Izaberi paket koji ti najviše odgovara.</p>
+      <p class="muted">Klikni na paket i odmah zakaži termin.</p>
     </div>
 
     <div class="grid3">
-      <article class="card card--hover">
+      <article class="card card--hover pkgCard" data-pkg="60">
         <span class="pill">Basic • 60 min</span>
         <h3>Basic</h3>
         <div class="price">30€</div>
@@ -64,7 +65,7 @@
         </ul>
       </article>
 
-      <article class="card card--hover">
+      <article class="card card--hover pkgCard" data-pkg="90">
         <span class="pill">Standard • 90 min</span>
         <h3>Standard</h3>
         <div class="price">70€</div>
@@ -78,7 +79,7 @@
         </ul>
       </article>
 
-      <article class="card card--hover">
+      <article class="card card--hover pkgCard" data-pkg="120">
         <span class="pill">Premium • 120 min</span>
         <h3>Premium</h3>
         <div class="price">100€</div>
@@ -163,6 +164,12 @@
 
       <button class="faq__q" data-faq>Koliko traje pranje? <span class="faq__icon">+</span></button>
       <div class="faq__a">Basic 60 min, Standard 90 min, Premium 120 min.</div>
+
+      <button class="faq__q" data-faq>Da li radite nedeljom? <span class="faq__icon">+</span></button>
+      <div class="faq__a">Da — radno vreme je 17:00–22:00 (nedelja je radna).</div>
+
+      <button class="faq__q" data-faq>Kako se vrši plaćanje? <span class="faq__icon">+</span></button>
+      <div class="faq__a">Plaćanje po završetku usluge (gotovina ili dogovor).</div>
     </div>
   </section>
 
@@ -191,12 +198,14 @@
           <div>
             <label class="label">Paket</label>
 
+            <!-- hidden real select -->
             <select id="pkg" class="sr-only" aria-hidden="true" tabindex="-1">
               <option value="60" selected>Basic (60 min)</option>
               <option value="90">Standard (90 min)</option>
               <option value="120">Premium (120 min)</option>
             </select>
 
+            <!-- custom dropdown -->
             <div class="dd" id="pkgDD">
               <button class="dd__btn" id="pkgBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                 <span class="dd__value" id="pkgValue">Basic (60 min)</span>
@@ -264,6 +273,6 @@
 
   <footer class="footer">© 2026 Mobilno Pranje</footer>
 
-  <script src="script.js?v=21"></script>
+  <script src="script.js?v=31"></script>
 </body>
 </html>
