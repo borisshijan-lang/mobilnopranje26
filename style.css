@@ -85,20 +85,22 @@ a{color:inherit}
   transition: transform 6s ease, filter .4s ease;
 }
 @keyframes heroSlide{
+  @keyframes heroSlide{
   0%{
-    background-image:url("https://images.unsplash.com/photo-1607330289024-1535c6b4e1c8?q=80&w=1920&auto=format&fit=crop");
+    background-image:url("https://unsplash.com/photos/DGX_ysDksWQ/download?force=true");
   }
   33%{
-    background-image:url("https://images.unsplash.com/photo-1624971903142-1c3d6a3d4a0b?q=80&w=1920&auto=format&fit=crop");
+    background-image:url("https://unsplash.com/photos/Wa9gkmHOTf8/download?force=true");
   }
   66%{
-    background-image:url("https://images.unsplash.com/photo-1612349316228-5942a9b489c2?q=80&w=1920&auto=format&fit=crop");
+    background-image:url("https://unsplash.com/photos/kkbq0RVg89s/download?force=true");
   }
   100%{
-    background-image:url("https://images.unsplash.com/photo-1607330289024-1535c6b4e1c8?q=80&w=1920&auto=format&fit=crop");
+    background-image:url("https://unsplash.com/photos/DGX_ysDksWQ/download?force=true");
   }
 }
 body.loaded .hero::before{ transform: scale(1.12); }
+background-color:#0b0b0f;
 
 .hero__overlay{
   position:absolute;
