@@ -320,37 +320,34 @@ a{color:inherit}
   .slots{grid-template-columns:repeat(2,1fr)}
   .hero h1{font-size:32px}
 }
-/* ===== Focus / Blur efekt kad se klikne paket ===== */
+/* ===== Focus / Blur efekt ===== */
 
 #focusOverlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.45);
-  backdrop-filter: blur(6px);
+  background:rgba(0,0,0,.55);
+  backdrop-filter: blur(7px);
   opacity:0;
   pointer-events:none;
   transition:.35s ease;
   z-index:998;
 }
 
-/* aktivan blur */
 .focus-active #focusOverlay{
   opacity:1;
 }
 
-/* zoom booking panela */
+/* booking zoom */
+.focus-active #booking{
+  position:relative;
+  z-index:999;
+}
+
 .focus-active #booking .panel{
-  transform: scale(1.06);
-  box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(0,194,255,.35);
+  transform: scale(1.05);
+  transition:.25s ease;
+  box-shadow:
+    0 40px 100px rgba(0,0,0,.6),
+    0 0 0 1px rgba(0,194,255,.35);
   border-color: rgba(0,194,255,.5);
-}
-
-/* malo veći dropdown */
-.focus-active .dd__btn{
-  transform: scale(1.06);
-}
-
-/* malo veći slotovi */
-.focus-active .slot{
-  transform: scale(1.06);
 }
