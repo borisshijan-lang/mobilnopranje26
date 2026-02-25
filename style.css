@@ -119,8 +119,19 @@ a{color:inherit}
   border-radius:18px;
   padding:18px;
   box-shadow:0 10px 30px rgba(0,0,0,.25);
+  transition: .18s ease;
 }
-.card--highlight{border-color:rgba(0,194,255,.35)}
+
+/* ✅ hover efekat za Cene/ Usluge */
+.card--hover:hover{
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(0,194,255,.30);
+  box-shadow: 0 18px 48px rgba(0,194,255,.10), 0 18px 48px rgba(0,0,0,.35);
+}
+
+/* ❌ nema vise stalnog highlighta */
+.card--highlight{border-color: var(--line);} /* zadržano da ne pukne HTML ako negde ostane */
+
 .pill{
   display:inline-block;
   padding:6px 10px;border-radius:999px;font-size:12px;
@@ -128,7 +139,6 @@ a{color:inherit}
   border:1px solid rgba(0,194,255,.25);
   margin-bottom:10px;
 }
-.pill--strong{background:rgba(0,194,255,.16);border-color:rgba(0,194,255,.38)}
 .price{font-size:28px;font-weight:800;margin:6px 0 6px}
 .list{margin:12px 0 0;padding-left:18px}
 .list li{margin:0 0 8px;color:rgba(255,255,255,.86)}
@@ -196,7 +206,7 @@ a{color:inherit}
 }
 .input:focus{border-color:rgba(0,194,255,.55)}
 
-/* ✅ Custom Dropdown */
+/* Custom Dropdown */
 .dd{position:relative; width:100%;}
 .dd__btn{
   width:100%;
@@ -216,7 +226,6 @@ a{color:inherit}
 }
 .dd__value{font-weight:700}
 .dd__chev{opacity:.75}
-
 .dd__menu{
   position:absolute;
   top:calc(100% + 8px);
@@ -230,7 +239,6 @@ a{color:inherit}
   z-index:50;
 }
 .dd--open .dd__menu{display:block;}
-
 .dd__opt{
   width:100%;
   display:flex; align-items:center; justify-content:space-between;
@@ -267,8 +275,6 @@ a{color:inherit}
   border:1px solid rgba(255,255,255,.10);
   background:rgba(0,0,0,.16);
 }
-
-/* Slots grid */
 .slots{
   display:grid;
   grid-template-columns:repeat(4,1fr);
