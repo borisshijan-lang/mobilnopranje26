@@ -68,7 +68,8 @@ a{color:inherit}
   min-height:100vh;
   padding:110px 18px 50px;
   display:flex;align-items:center;justify-content:center;
-  background:url("https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat;
+  background:url("https://images.pexels.com/photos/210019/pexels-photo-210019.jpeg") center/cover no-repeat;
+  position:relative;
 }
 .hero__overlay{
   position:absolute;inset:0;
@@ -118,7 +119,7 @@ a{color:inherit}
   border-radius:18px;
   padding:18px;
   box-shadow:0 10px 30px rgba(0,0,0,.25);
-  transition: .18s ease;
+  transition:.18s ease;
 }
 .card--hover:hover{
   transform: translateY(-6px) scale(1.02);
@@ -158,7 +159,7 @@ a{color:inherit}
 
 /* Booking layout */
 .booking{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.05fr .95fr;gap:16px}
-.panel{background:rgba(18,18,26,.92);border:1px solid var(--line);border-radius:18px;padding:16px}
+.panel{background:rgba(18,18,26,.92);border:1px solid var(--line);border-radius:18px;padding:16px;transition:.25s ease}
 .calTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 .calTitle{font-weight:800}
 .iconBtn{
@@ -320,34 +321,40 @@ a{color:inherit}
   .slots{grid-template-columns:repeat(2,1fr)}
   .hero h1{font-size:32px}
 }
-/* ===== Focus / Blur efekt ===== */
+
+/* =========================================
+   ✅ FOCUS/BLUR (OSTAJE DOK NE IZABEREŠ VREME)
+   ========================================= */
 
 #focusOverlay{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.55);
-  backdrop-filter: blur(7px);
   opacity:0;
   pointer-events:none;
-  transition:.35s ease;
+  transition:.25s ease;
   z-index:998;
+  /* blur support + fallback */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .focus-active #focusOverlay{
   opacity:1;
+  pointer-events:auto; /* klik na overlay da ugasi blur */
 }
 
-/* booking zoom */
+/* booking iznad overlay */
 .focus-active #booking{
   position:relative;
   z-index:999;
 }
 
+/* zoom booking panel */
 .focus-active #booking .panel{
   transform: scale(1.05);
-  transition:.25s ease;
-  box-shadow:
-    0 40px 100px rgba(0,0,0,.6),
-    0 0 0 1px rgba(0,194,255,.35);
   border-color: rgba(0,194,255,.5);
+  box-shadow:
+    0 40px 110px rgba(0,0,0,.65),
+    0 0 0 1px rgba(0,194,255,.35);
 }
