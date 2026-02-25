@@ -14,8 +14,7 @@ function niceTime(min){
 function isPast(y,m,d){
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const x = new Date(y, m, d);
-  return x < today;
+  return new Date(y, m, d) < today;
 }
 function withTimeout(promise, ms){
   return Promise.race([
@@ -24,7 +23,7 @@ function withTimeout(promise, ms){
   ]);
 }
 
-/* ===== Hero effects ===== */
+/* HERO effects */
 window.addEventListener("load", ()=> document.body.classList.add("loaded"));
 const hero = document.querySelector(".hero");
 window.addEventListener("scroll", ()=>{
@@ -35,15 +34,15 @@ window.addEventListener("scroll", ()=>{
   }
 });
 
-/* ===== Focus/Blur helpers ===== */
+/* Focus/Blur helpers */
 const focusOverlay = $("focusOverlay");
 function enableFocus(){ document.body.classList.add("focus-active"); }
 function disableFocus(){ document.body.classList.remove("focus-active"); }
 focusOverlay?.addEventListener("click", disableFocus);
 document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") disableFocus(); });
 
-/* ===== Smooth scroll + ugasi blur kad ideš na druge sekcije ===== */
-(function enableSmoothAnchors(){
+/* Smooth anchor scroll (i fokus za booking) */
+(function(){
   const NAV_OFFSET = 80;
   function smoothTo(el){
     const y = el.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET;
@@ -60,22 +59,17 @@ document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") disableFocus(
     const target = document.querySelector(hash);
     if(!target) return;
 
-    if(hash !== "#booking") disableFocus();
-
     e.preventDefault();
     history.pushState(null, "", hash);
-    smoothTo(target);
-  });
 
-  window.addEventListener("load", ()=>{
-    if(location.hash){
-      const target = document.querySelector(location.hash);
-      if(target) setTimeout(()=>smoothTo(target), 60);
-    }
+    if(hash === "#booking") enableFocus();
+    else disableFocus();
+
+    smoothTo(target);
   });
 })();
 
-/* ===== Firebase (privatno: samo upis zahteva) ===== */
+/* Firebase (samo upis zahteva) */
 let db = null;
 let firebaseReady = false;
 
@@ -89,7 +83,6 @@ try{
     messagingSenderId: "862210046561",
     appId: "1:862210046561:web:a073eb551cdff9199dc820"
   };
-
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
   firebaseReady = true;
@@ -98,7 +91,7 @@ try{
   firebaseReady = false;
 }
 
-/* ===== FAQ ===== */
+/* FAQ */
 document.querySelectorAll("[data-faq]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     const ans = btn.nextElementSibling;
@@ -109,7 +102,7 @@ document.querySelectorAll("[data-faq]").forEach(btn=>{
   });
 });
 
-/* ===== Booking elements ===== */
+/* Booking elements */
 const elTitle = $("calTitle");
 const elDow   = $("dow");
 const elGrid  = $("calGrid");
@@ -145,7 +138,7 @@ let selectedTime = null;
 
 const DOW = ["Pon","Uto","Sre","Čet","Pet","Sub","Ned"];
 
-/* ===== Dropdown ===== */
+/* Dropdown */
 function buildPkgDropdown(){
   ddMenu.innerHTML = "";
   const opts = Array.from(elPkg.options);
@@ -156,11 +149,7 @@ function buildPkgDropdown(){
     btn.className = "dd__opt";
     btn.setAttribute("role","option");
     btn.dataset.value = o.value;
-
-    btn.innerHTML = `
-      <span>${o.text}</span>
-      <span class="dd__badge">${o.value} min</span>
-    `;
+    btn.innerHTML = `<span>${o.text}</span><span class="dd__badge">${o.value} min</span>`;
 
     btn.addEventListener("click", ()=>{
       setPackage(o.value);
@@ -173,19 +162,10 @@ function buildPkgDropdown(){
 
   ddVal.textContent = elPkg.options[elPkg.selectedIndex]?.text || "";
 }
+function openDD(){ ddRoot.classList.add("dd--open"); ddBtn.setAttribute("aria-expanded","true"); }
+function closeDD(){ ddRoot.classList.remove("dd--open"); ddBtn.setAttribute("aria-expanded","false"); }
+function toggleDD(){ ddRoot.classList.contains("dd--open") ? closeDD() : openDD(); }
 
-function openDD(){
-  ddRoot.classList.add("dd--open");
-  ddBtn.setAttribute("aria-expanded","true");
-}
-function closeDD(){
-  ddRoot.classList.remove("dd--open");
-  ddBtn.setAttribute("aria-expanded","false");
-}
-function toggleDD(){
-  if(ddRoot.classList.contains("dd--open")) closeDD();
-  else openDD();
-}
 ddBtn?.addEventListener("click", (e)=>{ e.preventDefault(); toggleDD(); });
 document.addEventListener("click", (e)=>{ if(ddRoot && !ddRoot.contains(e.target)) closeDD(); });
 document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closeDD(); });
@@ -204,15 +184,13 @@ function setPackage(value){
   if(selected) renderSlots();
 }
 
-/* ===== Cards -> booking + fokus ===== */
+/* Price cards -> booking + fokus */
 function scrollToBooking(){
-  const NAV_OFFSET = 80;
   const booking = document.querySelector("#booking");
   if(!booking) return;
-  const y = booking.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET;
+  const y = booking.getBoundingClientRect().top + window.pageYOffset - 80;
   window.scrollTo({ top: y, behavior: "smooth" });
 }
-
 document.querySelectorAll(".pkgCard[data-pkg]").forEach(card=>{
   card.style.cursor = "pointer";
   card.addEventListener("click", ()=>{
@@ -223,7 +201,7 @@ document.querySelectorAll(".pkgCard[data-pkg]").forEach(card=>{
   });
 });
 
-/* ===== Init ===== */
+/* Init */
 buildPkgDropdown();
 renderDow();
 renderCalendar();
@@ -232,7 +210,7 @@ renderSlotsPlaceholder();
 updateSlotsMeta("—");
 statusLine.textContent = firebaseReady ? "" : "Napomena: trenutno nije aktivna baza (Firebase).";
 
-/* ===== Calendar ===== */
+/* Calendar */
 function renderDow(){
   elDow.innerHTML = "";
   DOW.forEach(name=>{
@@ -300,7 +278,7 @@ elGrid.addEventListener("click", async (e)=>{
   await renderSlots();
 });
 
-/* ===== Slots (korak = trajanje paketa) ===== */
+/* Slots (korak = trajanje paketa) */
 function updateSlotsMeta(text){ elSlotsMeta.textContent = text; }
 
 function renderSlotsPlaceholder(){
@@ -308,12 +286,12 @@ function renderSlotsPlaceholder(){
   btnSend.disabled = true;
 }
 
-async function getBookingsForDaySafe(key){
+async function getRequestsForDaySafe(key){
   if(!firebaseReady || !db) return {bookings:[], source:"offline"};
 
   try{
     const readPromise = db.ref("requests").orderByChild("dateKey").equalTo(key).once("value");
-    const snap = await withTimeout(readPromise, 2000);
+    const snap = await withTimeout(readPromise, 2500);
     const arr = [];
     snap.forEach(s => arr.push(s.val()));
     return {bookings: arr, source:"firebase"};
@@ -334,10 +312,10 @@ async function renderSlots(){
   }
 
   const duration = parseInt(elPkg.value,10);
-  const step = duration;
+  const step = duration; // prilagođeno trajanju paketa
   const key = dateKey(selected.y, selected.m, selected.d);
 
-  const {bookings, source} = await getBookingsForDaySafe(key);
+  const {bookings, source} = await getRequestsForDaySafe(key);
 
   elSlots.innerHTML = "";
   let created = 0;
@@ -348,6 +326,7 @@ async function renderSlots(){
 
   for(let start = dayStart; start + duration <= dayEnd; start += step){
     const end = start + duration;
+
     const clash = bookings.some(b => start < (b.time + b.duration) && end > b.time);
 
     const btn = document.createElement("button");
@@ -367,7 +346,7 @@ async function renderSlots(){
         btnSend.disabled = false;
         renderSummary();
 
-        // blur nestaje kad izabere vreme
+        // kad odabere vreme, ugasi blur
         disableFocus();
       });
     }
@@ -376,15 +355,14 @@ async function renderSlots(){
     created++;
   }
 
-  const sourceText = (source==="firebase") ? "sinhronizovano" : "offline prikaz";
-  updateSlotsMeta(`Slotovi: ${created} • Slobodno: ${free} • ${sourceText}`);
+  updateSlotsMeta(`Slotovi: ${created} • Slobodno: ${free} • ${source}`);
 
   if(created === 0){
     elSlots.innerHTML = `<div class="muted">Nema slotova za ovaj paket (prelazi 22:00).</div>`;
   }
 }
 
-/* ===== Summary + reset ===== */
+/* Summary + reset */
 function renderSummary(){
   elSumDate.textContent = selected ? niceDate(selected.y,selected.m,selected.d) : "—";
   elSumTime.textContent = (selectedTime!=null) ? niceTime(selectedTime) : "—";
@@ -405,11 +383,10 @@ btnReset.addEventListener("click", ()=>{
   disableFocus();
 });
 
-/* ===== Submit request (bez WA / bez tvog broja) ===== */
+/* Submit request (bez WA / bez tvog broja) */
 function isValidPhone(s){
   const t = (s || "").trim();
   if(t.length < 6) return false;
-  // dozvoli brojeve, razmake, +, -, /
   return /^[0-9+\-\/\s()]+$/.test(t);
 }
 
@@ -453,7 +430,6 @@ btnSend.addEventListener("click", async ()=>{
     });
 
     statusLine.textContent = "✅ Zahtev poslat! Uskoro dobijaš potvrdu termina.";
-    // refresh slotova (da termin postane zauzet)
     await renderSlots();
   }catch(e){
     console.error("DB write error:", e);
