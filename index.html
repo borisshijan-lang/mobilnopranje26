@@ -9,10 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <!-- cache bust -->
-  <link rel="stylesheet" href="style.css?v=20">
+  <link rel="stylesheet" href="style.css?v=21">
 
-  <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -46,43 +44,50 @@
     </div>
   </header>
 
-  <section id="services" class="section">
+  <!-- ✅ CENE (izgled kao stari services) -->
+  <section id="prices" class="section">
     <div class="section__head">
-      <h2>Usluge</h2>
-      <p class="muted">Jasno definisani paketi, bez iznenađenja.</p>
+      <h2>Cene</h2>
+      <p class="muted">Izaberi paket koji ti najviše odgovara.</p>
     </div>
 
     <div class="grid3">
-      <article class="card">
+      <article class="card card--hover">
         <span class="pill">Basic • 60 min</span>
         <h3>Basic</h3>
-        <div class="price">20€</div>
+        <div class="price">30€</div>
         <ul class="list">
           <li>Spoljašnje pranje</li>
           <li>Felne i gume</li>
           <li>Sušenje + brisanje</li>
-          <li>Stakla spolja</li>
+          <li>Stakla spolja + unutra</li>
         </ul>
       </article>
 
-      <article class="card card--highlight">
-        <span class="pill pill--strong">Standard • 90 min</span>
+      <article class="card card--hover">
+        <span class="pill">Standard • 90 min</span>
         <h3>Standard</h3>
-        <div class="price">35€</div>
+        <div class="price">70€</div>
         <ul class="list">
-          <li>Sve iz Basic</li>
+          <li>Spoljašnje pranje</li>
+          <li>Felne + gume</li>
+          <li>Sušenje + brisanje</li>
           <li>Usisavanje enterijera</li>
           <li>Plastike + detalji</li>
           <li>Stakla unutra + spolja</li>
         </ul>
       </article>
 
-      <article class="card">
+      <article class="card card--hover">
         <span class="pill">Premium • 120 min</span>
         <h3>Premium</h3>
-        <div class="price">60€</div>
+        <div class="price">100€</div>
         <ul class="list">
-          <li>Sve iz Standard</li>
+          <li>Spoljašnje pranje</li>
+          <li>Felne + gume</li>
+          <li>Sušenje + brisanje</li>
+          <li>Usisavanje enterijera</li>
+          <li>Plastike + detalji</li>
           <li>Pragovi/otvori + detalji</li>
           <li>Finiš i osveženje</li>
           <li>Dodatno po dogovoru</li>
@@ -91,27 +96,45 @@
     </div>
   </section>
 
-  <section id="prices" class="section section--alt">
+  <!-- ✅ USLUGE (bez cena) -->
+  <section id="services" class="section section--alt">
     <div class="section__head">
-      <h2>Cenovnik</h2>
-      <p class="muted">Šta tačno dobijaš u svakom paketu.</p>
+      <h2>Usluge</h2>
+      <p class="muted">Šta sve pružamo (bez obzira na paket).</p>
     </div>
 
     <div class="grid3">
-      <article class="card">
-        <h3>Basic</h3>
-        <div class="price">20€</div>
-        <p class="muted">Spolja + felne, brzo i uredno.</p>
+      <article class="card card--hover">
+        <span class="pill">Spolja</span>
+        <h3>Eksterijer</h3>
+        <ul class="list">
+          <li>Predpranje + aktivna pena</li>
+          <li>Ručno pranje (bez grebanja)</li>
+          <li>Felne + gume</li>
+          <li>Sušenje + final wipe</li>
+        </ul>
       </article>
-      <article class="card">
-        <h3>Standard</h3>
-        <div class="price">35€</div>
-        <p class="muted">Spolja + unutra, najbolja opcija.</p>
+
+      <article class="card card--hover">
+        <span class="pill">Unutra</span>
+        <h3>Enterijer</h3>
+        <ul class="list">
+          <li>Usisavanje (pod, sedišta, gepek)</li>
+          <li>Plastike + detalji</li>
+          <li>Stakla unutra</li>
+          <li>Osveženje kabine</li>
+        </ul>
       </article>
-      <article class="card">
-        <h3>Premium</h3>
-        <div class="price">60€</div>
-        <p class="muted">Detaljnije, “kao novo”.</p>
+
+      <article class="card card--hover">
+        <span class="pill">Detalji</span>
+        <h3>Detaljing</h3>
+        <ul class="list">
+          <li>Pragovi / ivice / otvori</li>
+          <li>Teže dostupna mesta</li>
+          <li>Finiš i “showroom” izgled</li>
+          <li>Dodatno po dogovoru</li>
+        </ul>
       </article>
     </div>
   </section>
@@ -151,7 +174,6 @@
     </div>
 
     <div class="booking">
-      <!-- Calendar -->
       <div class="panel">
         <div class="calTop">
           <button class="iconBtn" id="prevMonth" type="button">‹</button>
@@ -164,20 +186,17 @@
         <div class="note" id="selectedInfo">Izaberi datum.</div>
       </div>
 
-      <!-- Controls -->
       <div class="panel">
         <div class="row">
           <div>
             <label class="label">Paket</label>
 
-            <!-- Hidden real select (logic uses this) -->
             <select id="pkg" class="sr-only" aria-hidden="true" tabindex="-1">
               <option value="60" selected>Basic (60 min)</option>
               <option value="90">Standard (90 min)</option>
               <option value="120">Premium (120 min)</option>
             </select>
 
-            <!-- Custom dropdown -->
             <div class="dd" id="pkgDD">
               <button class="dd__btn" id="pkgBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                 <span class="dd__value" id="pkgValue">Basic (60 min)</span>
