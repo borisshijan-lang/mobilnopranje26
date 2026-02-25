@@ -24,9 +24,49 @@ function withTimeout(promise, ms){
   ]);
 }
 
-// ---------------------
-// Firebase (ne ruši UI)
-// ---------------------
+/* =========================
+   ✅ SMOOTH SCROLL (MENU + LOGO)
+   ========================= */
+(function enableSmoothAnchors(){
+  const NAV_OFFSET = 80; // visina navbara (da naslov ne uđe ispod nav-a)
+
+  function smoothTo(el){
+    const y = el.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  }
+
+  document.addEventListener("click", (e)=>{
+    const a = e.target.closest('a[href^="#"]');
+    if(!a) return;
+
+    const hash = a.getAttribute("href");
+    if(!hash || hash === "#") return;
+
+    const target = document.querySelector(hash);
+    if(!target) return;
+
+    e.preventDefault();
+
+    // update URL hash bez skoka
+    history.pushState(null, "", hash);
+
+    smoothTo(target);
+  });
+
+  // Ako se stranica otvori sa hashom (npr. /#gallery) -> smooth scroll posle load
+  window.addEventListener("load", ()=>{
+    if(location.hash){
+      const target = document.querySelector(location.hash);
+      if(target){
+        setTimeout(()=>smoothTo(target), 60);
+      }
+    }
+  });
+})();
+
+/* =========================
+   Firebase (ne ruši UI)
+   ========================= */
 let db = null;
 let auth = null;
 let firebaseReady = false;
@@ -51,9 +91,9 @@ try{
   firebaseReady = false;
 }
 
-// ---------------------
-// FAQ
-// ---------------------
+/* =========================
+   FAQ
+   ========================= */
 document.querySelectorAll("[data-faq]").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     const ans = btn.nextElementSibling;
@@ -64,9 +104,9 @@ document.querySelectorAll("[data-faq]").forEach(btn=>{
   });
 });
 
-// ---------------------
-// Booking elements
-// ---------------------
+/* =========================
+   Booking elements
+   ========================= */
 const elTitle = $("calTitle");
 const elDow   = $("dow");
 const elGrid  = $("calGrid");
@@ -102,10 +142,12 @@ let selectedTime = null;
 
 const DOW = ["Pon","Uto","Sre","Čet","Pet","Sub","Ned"];
 
-// ---------------------
-// Custom dropdown build
-// ---------------------
+/* =========================
+   Custom dropdown build
+   ========================= */
 function buildPkgDropdown(){
+  if(!elPkg || !ddMenu || !ddVal) return;
+
   ddMenu.innerHTML = "";
   const opts = Array.from(elPkg.options);
 
@@ -113,9 +155,10 @@ function buildPkgDropdown(){
     elPkg.value = value;
     const text = elPkg.options[elPkg.selectedIndex]?.text || "";
     ddVal.textContent = text;
-    // refresh summary + slots
+
     selectedTime = null;
     btnSend.disabled = true;
+
     renderSummary();
     if(selected) renderSlots();
   };
@@ -127,7 +170,6 @@ function buildPkgDropdown(){
     btn.setAttribute("role","option");
     btn.dataset.value = o.value;
 
-    // badge (60/90/120)
     btn.innerHTML = `
       <span>${o.text}</span>
       <span class="dd__badge">${o.value} min</span>
@@ -137,7 +179,6 @@ function buildPkgDropdown(){
       opts.forEach(x=>x.selected=false);
       o.selected = true;
 
-      // aria selected update
       ddMenu.querySelectorAll(".dd__opt").forEach(x=>x.setAttribute("aria-selected","false"));
       btn.setAttribute("aria-selected","true");
 
@@ -149,7 +190,6 @@ function buildPkgDropdown(){
     ddMenu.appendChild(btn);
   });
 
-  // initial value
   ddVal.textContent = elPkg.options[elPkg.selectedIndex]?.text || "";
 }
 
@@ -166,21 +206,21 @@ function toggleDD(){
   else openDD();
 }
 
-ddBtn.addEventListener("click", (e)=>{
+ddBtn?.addEventListener("click", (e)=>{
   e.preventDefault();
   toggleDD();
 });
 
 document.addEventListener("click", (e)=>{
-  if(!ddRoot.contains(e.target)) closeDD();
+  if(ddRoot && !ddRoot.contains(e.target)) closeDD();
 });
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape") closeDD();
 });
 
-// ---------------------
-// Init
-// ---------------------
+/* =========================
+   Init
+   ========================= */
 buildPkgDropdown();
 renderDow();
 renderCalendar();
@@ -188,10 +228,11 @@ renderSummary();
 renderSlotsPlaceholder();
 updateSlotsMeta("—");
 
-// ---------------------
-// Calendar
-// ---------------------
+/* =========================
+   Calendar
+   ========================= */
 function renderDow(){
+  if(!elDow) return;
   elDow.innerHTML = "";
   DOW.forEach(name=>{
     const div = document.createElement("div");
@@ -206,6 +247,7 @@ function viewMonth(step){
 }
 
 function renderCalendar(){
+  if(!elTitle || !elGrid) return;
   elTitle.textContent = monthTitle(view);
   elGrid.innerHTML = "";
 
@@ -239,8 +281,7 @@ function renderCalendar(){
   }
 }
 
-// delegation
-elGrid.addEventListener("click", async (e)=>{
+elGrid?.addEventListener("click", async (e)=>{
   const cell = e.target.closest(".day");
   if(!cell) return;
   if(cell.classList.contains("day--empty")) return;
@@ -256,17 +297,20 @@ elGrid.addEventListener("click", async (e)=>{
   document.querySelectorAll(".day--selected").forEach(x=>x.classList.remove("day--selected"));
   cell.classList.add("day--selected");
 
-  elInfo.textContent = `Izabran datum: ${niceDate(y,m,d)}. Izaberi vreme.`;
+  if(elInfo) elInfo.textContent = `Izabran datum: ${niceDate(y,m,d)}. Izaberi vreme.`;
   renderSummary();
   await renderSlots();
 });
 
-// ---------------------
-// Slots
-// ---------------------
-function updateSlotsMeta(text){ elSlotsMeta.textContent = text; }
+/* =========================
+   Slots
+   ========================= */
+function updateSlotsMeta(text){
+  if(elSlotsMeta) elSlotsMeta.textContent = text;
+}
 
 function renderSlotsPlaceholder(){
+  if(!elSlots) return;
   elSlots.innerHTML = `<div class="muted">Izaberi datum da vidiš slobodne termine.</div>`;
   btnSend.disabled = true;
 }
@@ -276,7 +320,7 @@ async function getBookingsForDaySafe(key){
 
   try{
     const readPromise = db.ref("bookings").orderByChild("dateKey").equalTo(key).once("value");
-    const snap = await withTimeout(readPromise, 2000); // 2s
+    const snap = await withTimeout(readPromise, 2000);
     const arr = [];
     snap.forEach(s => arr.push(s.val()));
     return {bookings: arr, source:"firebase"};
@@ -287,6 +331,9 @@ async function getBookingsForDaySafe(key){
 }
 
 async function renderSlots(){
+  if(!elSlots){
+    return;
+  }
   elSlots.innerHTML = `<div class="muted">Učitavanje termina...</div>`;
   btnSend.disabled = true;
 
@@ -345,31 +392,33 @@ async function renderSlots(){
   }
 }
 
-// ---------------------
-// Summary + reset
-// ---------------------
+/* =========================
+   Summary + reset
+   ========================= */
 function renderSummary(){
-  elSumDate.textContent = selected ? niceDate(selected.y,selected.m,selected.d) : "—";
-  elSumTime.textContent = (selectedTime!=null) ? niceTime(selectedTime) : "—";
-  elSumPkg.textContent  = elPkg.options[elPkg.selectedIndex]?.text || "—";
+  if(elSumDate) elSumDate.textContent = selected ? niceDate(selected.y,selected.m,selected.d) : "—";
+  if(elSumTime) elSumTime.textContent = (selectedTime!=null) ? niceTime(selectedTime) : "—";
+  if(elSumPkg)  elSumPkg.textContent  = elPkg?.options[elPkg.selectedIndex]?.text || "—";
 }
 
-btnReset.addEventListener("click", ()=>{
+btnReset?.addEventListener("click", ()=>{
   selected = null;
   selectedTime = null;
   btnSend.disabled = true;
-  elInfo.textContent = "Izaberi datum.";
+
+  if(elInfo) elInfo.textContent = "Izaberi datum.";
   document.querySelectorAll(".day--selected").forEach(x=>x.classList.remove("day--selected"));
   document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
+
   renderSummary();
   renderSlotsPlaceholder();
   updateSlotsMeta("—");
 });
 
-// ---------------------
-// Send request
-// ---------------------
-btnSend.addEventListener("click", async ()=>{
+/* =========================
+   Send request
+   ========================= */
+btnSend?.addEventListener("click", async ()=>{
   if(!selected || selectedTime==null) return;
 
   const phone = (elWhats.value || "").trim();
@@ -382,10 +431,8 @@ btnSend.addEventListener("click", async ()=>{
 
   const msg = `Rezervacija ${dateText} Paket: ${packageName} Vreme: ${niceTime(selectedTime)}`;
 
-  // uvek pošalji WA
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
 
-  // pokušaj upis u bazu
   if(!firebaseReady || !db){
     alert("Poslat WhatsApp zahtev. (Firebase nije povezan — nije upisano u bazu)");
     return;
