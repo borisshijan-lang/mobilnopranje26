@@ -9,16 +9,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=50">
+  <link rel="stylesheet" href="style.css?v=80">
 
-  <!-- Firebase v8 -->
+  <!-- Firebase v8 (kompatibilno sa statičnim sajtom) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 </head>
 <body>
 
-  <!-- ✅ BLUR OVERLAY -->
+  <!-- Blur overlay (fokus na booking) -->
   <div id="focusOverlay" aria-hidden="true"></div>
 
   <nav class="nav">
@@ -30,7 +29,6 @@
         <a class="nav__link" href="#gallery">Galerija</a>
         <a class="nav__link" href="#faq">FAQ</a>
         <a class="nav__link nav__cta" href="#booking">Zakazivanje</a>
-        <a class="nav__link" href="#admin">Admin</a>
       </div>
     </div>
   </nav>
@@ -38,9 +36,9 @@
   <header id="home" class="hero">
     <div class="hero__overlay"></div>
     <div class="hero__content">
-      <span class="hero__badge">Beograd • Radno vreme: 17:00 – 22:00</span>
+      <span class="hero__badge">Beograd • Radno vreme: 17:00 – 22:00 • Nedelja je radna</span>
       <h1>Mobilno pranje vozila na tvojoj adresi</h1>
-      <p>Rezerviši termin za 15 sekundi — izaberi paket, datum i vreme.</p>
+      <p>Izaberi paket, datum i vreme — pošalji zahtev za termin.</p>
       <div class="hero__actions">
         <a class="btn btn--primary" href="#booking">Zakaži termin</a>
         <a class="btn btn--ghost" href="#prices">Pogledaj cene</a>
@@ -52,7 +50,7 @@
   <section id="prices" class="section">
     <div class="section__head">
       <h2>Cene</h2>
-      <p class="muted">Klikni na paket i odmah zakaži termin.</p>
+      <p class="muted">Klikni na paket i odmah pređi na zakazivanje tog paketa.</p>
     </div>
 
     <div class="grid3">
@@ -100,7 +98,7 @@
     </div>
   </section>
 
-  <!-- USLUGE -->
+  <!-- USLUGE (bez cena) -->
   <section id="services" class="section section--alt">
     <div class="section__head">
       <h2>Usluge</h2>
@@ -171,8 +169,8 @@
       <button class="faq__q" data-faq>Da li radite nedeljom? <span class="faq__icon">+</span></button>
       <div class="faq__a">Da — radno vreme je 17:00–22:00 (nedelja je radna).</div>
 
-      <button class="faq__q" data-faq>Kako se vrši plaćanje? <span class="faq__icon">+</span></button>
-      <div class="faq__a">Plaćanje po završetku usluge (gotovina ili dogovor).</div>
+      <button class="faq__q" data-faq>Da li moram unapred da platim? <span class="faq__icon">+</span></button>
+      <div class="faq__a">Ne. Zahtev se šalje, a potvrda termina ide naknadno.</div>
     </div>
   </section>
 
@@ -217,8 +215,9 @@
           </div>
 
           <div>
-            <label class="label" for="whats">WhatsApp broj</label>
-            <input id="whats" class="input" placeholder="3816..." value="381600000000"/>
+            <label class="label" for="phone">Kontakt telefon</label>
+            <input id="phone" class="input" placeholder="npr. 06x/xxx-xxxx" autocomplete="tel"/>
+            <div class="tiny muted">Telefon služi samo za potvrdu termina. Ne prikazujemo nikakav naš broj na sajtu.</div>
           </div>
         </div>
 
@@ -244,36 +243,13 @@
           <button class="btn btn--ghost" id="reset" type="button">Reset</button>
         </div>
 
-        <div class="tiny muted">Klikni na slobodan slot da izabereš vreme.</div>
-      </div>
-    </div>
-  </section>
-
-  <section id="admin" class="section section--alt">
-    <div class="section__head"><h2>Admin</h2></div>
-    <div class="admin">
-      <div class="panel">
-        <div class="row">
-          <input id="adminEmail" class="input" placeholder="Email">
-          <input id="adminPass" class="input" type="password" placeholder="Šifra">
-          <button class="btn btn--primary" id="adminLogin">Login</button>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="adminHead">
-          <h3>Rezervacije</h3>
-          <button class="btn btn--ghost" id="refreshAdmin" type="button">Osveži</button>
-        </div>
-        <div id="adminList" class="adminList">
-          <div class="muted">Uloguj se da vidiš listu.</div>
-        </div>
+        <div class="tiny muted" id="statusLine"></div>
       </div>
     </div>
   </section>
 
   <footer class="footer">© 2026 Mobilno Pranje</footer>
 
-  <script src="script.js?v=50"></script>
+  <script src="script.js?v=80"></script>
 </body>
 </html>
