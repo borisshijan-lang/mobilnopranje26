@@ -429,8 +429,12 @@ btnSend?.addEventListener("click", async ()=>{
   const key = dateKey(selected.y, selected.m, selected.d);
   const dateText = niceDate(selected.y, selected.m, selected.d);
 
-  const msg = `Rezervacija ${dateText} Paket: ${packageName} Vreme: ${niceTime(selectedTime)}`;
-
+  const msg =
+  `Zdravo, želim da zakažem termin ✅\n` +
+  `Datum: ${dateText}\n` +
+  `Vreme: ${niceTime(selectedTime)}\n` +
+  `Paket: ${packageName}\n` +
+  `Hvala!`;
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
 
   if(!firebaseReady || !db){
