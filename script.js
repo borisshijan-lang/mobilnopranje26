@@ -1,137 +1,115 @@
-// booking.js
+// ======= BLUR OVERLAY =======
+const overlay = document.getElementById('focusOverlay');
+function blurOn() { overlay.classList.add('active'); }
+function blurOff() { overlay.classList.remove('active'); }
 
-// --- Helperi ---
-function $(id){ return document.getElementById(id); }
-function pad2(n){ return String(n).padStart(2,"0"); }
-function dateKey(y,m,d){ return `${y}-${pad2(m+1)}-${pad2(d)}`; }
-function niceDate(y,m,d){ return `${pad2(d)}/${pad2(m+1)}/${y}`; }
-function niceTime(min){ const h=Math.floor(min/60); const m=min%60; return `${pad2(h)}:${pad2(m)}`; }
-function isPast(y,m,d){ const now=new Date(); const today=new Date(now.getFullYear(),now.getMonth(),now.getDate()); return new Date(y,m,d)<today; }
+// ======= FAQ =======
+document.querySelectorAll('[data-faq]').forEach(btn => {
+  btn.addEventListener('click', () => btn.classList.toggle('active'));
+});
 
-// --- Focus / blur ---
-const focusOverlay = $("focusOverlay");
-function enableFocus(){ document.body.classList.add("focus-active"); }
-function disableFocus(){ document.body.classList.remove("focus-active"); }
-focusOverlay?.addEventListener("click", disableFocus);
-window.addEventListener("scroll", disableFocus);
+// ======= DROPDOWN =======
+const pkgDD = document.getElementById('pkgDD');
+const pkgBtn = document.getElementById('pkgBtn');
+const pkgMenu = document.getElementById('pkgMenu');
+const pkgValue = document.getElementById('pkgValue');
+const pkgSelect = document.getElementById('pkg');
 
-// --- Calendar ---
-const elTitle = $("calTitle");
-const elDow = $("dow");
-const elGrid = $("calGrid");
-const DOW = ["Pon","Uto","Sre","Čet","Pet","Sub","Ned"];
+['Basic (60 min)','Standard (90 min)','Premium (120 min)'].forEach((txt,i)=>{
+  const div = document.createElement('div');
+  div.textContent = txt;
+  div.dataset.value = [60,90,120][i];
+  div.addEventListener('click',()=>{
+    pkgValue.textContent = txt;
+    pkgSelect.value = div.dataset.value;
+    pkgDD.classList.remove('active');
+  });
+  pkgMenu.appendChild(div);
+});
 
-let view = new Date();
-view.setDate(1);
-let selected = null;
-let selectedTime = null;
-const START_HOUR=17, END_HOUR=22;
+pkgBtn.addEventListener('click',()=>pkgDD.classList.toggle('active'));
 
-function renderDow(){ elDow.innerHTML=""; DOW.forEach(d=>{ const div=document.createElement("div"); div.textContent=d; elDow.appendChild(div); }); }
-function viewMonth(step){ view.setMonth(view.getMonth()+step); renderCalendar(); }
+// ======= SCROLL TO BOOKING & BLUR =======
+document.querySelectorAll('.nav__cta,.pkgCard,.hero__actions a[href="#booking"]').forEach(el=>{
+  el.addEventListener('click', e=>{
+    e.preventDefault();
+    document.getElementById('booking').scrollIntoView({behavior:'smooth'});
+    blurOff();
+  });
+});
 
-function renderCalendar(){
-  elTitle.textContent=`${view.toLocaleString("sr-Latn-RS",{month:"long",year:"numeric"})}`;
-  elGrid.innerHTML="";
-  const y=view.getFullYear(), m=view.getMonth();
-  const first=new Date(y,m,1);
-  let startIndex = first.getDay(); startIndex = (startIndex===0)?6:startIndex-1;
-  const daysInMonth = new Date(y,m+1,0).getDate();
+// ======= KALENDAR =======
+const calTitle = document.getElementById('calTitle');
+const calGrid = document.getElementById('calGrid');
+const prevMonth = document.getElementById('prevMonth');
+const nextMonth = document.getElementById('nextMonth');
+const selectedInfo = document.getElementById('selectedInfo');
+let current = new Date();
+let selectedDate = null;
 
-  for(let i=0;i<startIndex;i++){ const empty=document.createElement("div"); empty.className="day day--empty"; elGrid.appendChild(empty); }
-  for(let d=1; d<=daysInMonth; d++){
-    const cell=document.createElement("div"); cell.className="day"; cell.textContent=d;
-    cell.dataset.y=y; cell.dataset.m=m; cell.dataset.d=d;
-    if(isPast(y,m,d)) cell.classList.add("day--disabled");
-    if(selected && selected.y===y && selected.m===m && selected.d===d) cell.classList.add("day--selected");
-    elGrid.appendChild(cell);
+function buildCalendar(){
+  calGrid.innerHTML = '';
+  const y = current.getFullYear();
+  const m = current.getMonth();
+  calTitle.textContent = `${m+1}/${y}`;
+  const firstDay = new Date(y,m,1).getDay();
+  const lastDate = new Date(y,m+1,0).getDate();
+
+  for(let i=0;i<firstDay;i++){ calGrid.appendChild(document.createElement('div')); }
+  for(let d=1;d<=lastDate;d++){
+    const div = document.createElement('div');
+    div.textContent=d;
+    div.addEventListener('click',()=>selectDate(d));
+    if(selectedDate && selectedDate.getDate()===d && selectedDate.getMonth()===m) div.classList.add('selected');
+    calGrid.appendChild(div);
   }
 }
-
-// --- Slots ---
-const elSlots = $("slots");
-function renderSlotsPlaceholder(){ elSlots.innerHTML="Izaberi datum da vidiš slobodne termine."; }
-function renderSlots(){
-  if(!selected){ renderSlotsPlaceholder(); return; }
-  elSlots.innerHTML="";
-  const duration=parseInt($("pkg").value,10);
-  const step=duration;
-  const dayStart=START_HOUR*60, dayEnd=END_HOUR*60;
-
-  for(let start=dayStart; start+duration<=dayEnd; start+=step){
-    const btn=document.createElement("button"); btn.type="button"; btn.className="slot"; btn.textContent=niceTime(start);
-    btn.addEventListener("click", ()=>{
-      document.querySelectorAll(".slot--selected").forEach(x=>x.classList.remove("slot--selected"));
-      btn.classList.add("slot--selected");
-      selectedTime=start;
-      $("sendReq").disabled=false;
-      renderSummary();
-      disableFocus();
-    });
-    elSlots.appendChild(btn);
-  }
+function selectDate(d){
+  selectedDate = new Date(current.getFullYear(),current.getMonth(),d);
+  selectedInfo.textContent = selectedDate.toLocaleDateString('sr-RS');
+  document.getElementById('sumDate').textContent = selectedDate.toLocaleDateString('sr-RS');
+  buildCalendar();
+  blurOff();
+  loadSlots();
 }
 
-// --- Summary ---
-function renderSummary(){
-  $("sumDate").textContent=selected?niceDate(selected.y,selected.m,selected.d):"—";
-  $("sumTime").textContent=(selectedTime!=null)?niceTime(selectedTime):"—";
-  $("sumPkg").textContent=$("pkg").options[$("pkg").selectedIndex]?.text||"—";
+prevMonth.addEventListener('click',()=>{current.setMonth(current.getMonth()-1);buildCalendar();});
+nextMonth.addEventListener('click',()=>{current.setMonth(current.getMonth()+1);buildCalendar();});
+buildCalendar();
+
+// ======= SLOTOVI =======
+const slotsContainer = document.getElementById('slots');
+let slotsData = ['17:00','18:00','19:00','20:00','21:00','22:00'];
+function loadSlots(){
+  slotsContainer.innerHTML='';
+  slotsData.forEach(time=>{
+    const div=document.createElement('div');
+    div.textContent=time;
+    div.addEventListener('click',()=>{
+      document.querySelectorAll('#slots div').forEach(el=>el.classList.remove('selected'));
+      div.classList.add('selected');
+      document.getElementById('sumTime').textContent=time;
+      document.getElementById('sendReq').disabled=false;
+      blurOff();
+    });
+    slotsContainer.appendChild(div);
+  });
 }
 
-// --- Paket select ---
-$("pkg").addEventListener("change", ()=>{
-  selectedTime=null; $("sendReq").disabled=true; renderSummary(); renderSlots();
+// ======= SEND & RESET =======
+document.getElementById('sendReq').addEventListener('click',()=>{
+  document.getElementById('statusLine').textContent='Zahtev poslat!';
+});
+document.getElementById('reset').addEventListener('click',()=>{
+  selectedDate=null;
+  selectedInfo.textContent='Izaberi datum';
+  document.getElementById('sumDate').textContent='—';
+  document.getElementById('sumTime').textContent='—';
+  document.getElementById('sumPkg').textContent='—';
+  document.getElementById('sendReq').disabled=true;
+  document.getElementById('slots').innerHTML='<div class="muted">Izaberi datum da vidiš slobodne termine.</div>';
+  blurOff();
 });
 
-// --- Calendar click ---
-elGrid.addEventListener("click",(e)=>{
-  const cell=e.target.closest(".day");
-  if(!cell || cell.classList.contains("day--empty") || cell.classList.contains("day--disabled")) return;
-  selected={y:parseInt(cell.dataset.y,10), m:parseInt(cell.dataset.m,10), d:parseInt(cell.dataset.d,10)};
-  selectedTime=null;
-  document.querySelectorAll(".day--selected").forEach(x=>x.classList.remove("day--selected"));
-  cell.classList.add("day--selected");
-  renderSummary();
-  renderSlots();
-  enableFocus();
-});
-
-// --- Send request (EmailJS) ---
-emailjs.init("TVOJ_PUBLIC_KEY"); // stavi svoj key
-
-$("sendReq").addEventListener("click", async ()=>{
-  const statusLine=$("statusLine"); statusLine.textContent="";
-  const phone=$("phone").value.trim();
-  const pkg=$("pkg"); const duration=parseInt(pkg.value,10);
-  const packageName=pkg.options[pkg.selectedIndex].text;
-
-  if(!selected || selectedTime==null){ statusLine.textContent="Izaberi datum i vreme."; return; }
-  if(!phone.match(/^[0-9+\-\/\s()]+$/)){ statusLine.textContent="Unesi ispravan kontakt telefon."; return; }
-
-  statusLine.textContent="Slanje zahteva...";
-  $("sendReq").disabled=true;
-
-  try{
-    await emailjs.send("TVOJ_SERVICE_ID","TVOJ_TEMPLATE_ID",{
-      date: `${pad2(selected.d)}/${pad2(selected.m+1)}/${selected.y}`,
-      time: niceTime(selectedTime),
-      package: packageName,
-      phone: phone
-    });
-    statusLine.textContent="✅ Zahtev poslat!";
-    selected=null; selectedTime=null;
-    $("slots").innerHTML=""; $("sumDate").textContent="—"; $("sumTime").textContent="—"; $("sumPkg").textContent="—";
-    $("phone").value=""; disableFocus();
-  }catch(e){ console.error(e); statusLine.textContent="Greška pri slanju. Pokušaj ponovo."; $("sendReq").disabled=false; }
-});
-
-// --- Reset dugme ---
-$("reset").addEventListener("click", ()=>{
-  selected=null; selectedTime=null;
-  $("slots").innerHTML=""; $("sumDate").textContent="—"; $("sumTime").textContent="—"; $("sumPkg").textContent="—";
-  $("phone").value=""; $("statusLine").textContent=""; disableFocus();
-});
-
-// --- Init ---
-renderDow(); renderCalendar(); renderSlotsPlaceholder();
+// ======= ESCAPE da ukloni blur =======
+document.addEventListener('keydown',e=>{if(e.key==='Escape') blurOff();});
