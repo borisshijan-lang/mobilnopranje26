@@ -1,265 +1,173 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mobilno Pranje PRO</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Booking</title>
 
-  <meta name="description" content="Mobilno pranje automobila kod vas. Zakazivanje termina online.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
-  <link rel="stylesheet" href="style.css?v=900">
+<style>
+/* --- Tvoj CSS od root do .focus-active --- */
+:root{
+  --bg:#0b0b0f; --muted:#b9b9c7; --text:#ffffff;
+  --line:rgba(255,255,255,.08); --accent:#00c2ff; --accent2:#6ee7ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+body{
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(0,194,255,.18), transparent 60%),
+    radial-gradient(1000px 500px at 90% 10%, rgba(110,231,255,.10), transparent 55%),
+    var(--bg);
+  color:var(--text); scroll-behavior:smooth;
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:-2;
+  background:url("https://images.unsplash.com/photo-1607330289024-1535c6b4e1c8?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat;
+  opacity:.18; filter:saturate(1.05) contrast(1.05);
+}
 
-  <!-- Firebase v8 (radi na GitHub Pages bez bundlera) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+/* NAV, HERO, Section, Grid, Card... (stari CSS) */
+/* --- kopiraj ceo tvoj CSS iz prethodnog primera --- */
+
+/* Focus/Blur booking */
+#focusOverlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.55);
+  opacity:0; pointer-events:none; transition:.25s ease; z-index:998;
+  backdrop-filter: blur(10px);
+}
+.focus-active #focusOverlay{
+  opacity:1; pointer-events:auto;
+}
+.focus-active body > :not(#booking):not(#focusOverlay){
+  filter: blur(10px); opacity:.12; pointer-events:none;
+}
+.focus-active .nav{
+  opacity:0; pointer-events:none;
+  transform:translateY(-12px); transition:.25s ease;
+}
+.focus-active #booking{ position:relative; z-index:999; pointer-events:auto; }
+.focus-active #booking .panel{
+  transform: scale(1.03);
+  border-color: rgba(0,194,255,.55);
+  box-shadow: 0 40px 110px rgba(0,0,0,.65), 0 0 0 1px rgba(0,194,255,.35);
+}
+</style>
 </head>
-
 <body>
-  <!-- blur overlay (fokus booking) -->
-  <div id="focusOverlay" aria-hidden="true"></div>
 
-  <nav class="nav">
-    <div class="nav__inner">
-      <a class="brand" href="#home">MobilnoPranje</a>
+<div class="nav"> <!-- tvoj nav --> </div>
+<div class="hero"> <!-- hero content --> </div>
 
-      <div class="nav__links">
-        <a class="nav__link" href="#services">Usluge</a>
-        <a class="nav__link" href="#prices">Cene</a>
-        <a class="nav__link" href="#gallery">Galerija</a>
-        <a class="nav__link" href="#faq">FAQ</a>
-        <a class="nav__link nav__cta" href="#booking">Zakazivanje</a>
-      </div>
+<section id="booking" class="section">
+  <div id="focusOverlay"></div>
+  <div class="panel">
+    <h2>Zakazi termin</h2>
+    <label>Izaberi paket:
+      <select id="pkg">
+        <option value="30" selected>Mini paket</option>
+        <option value="45">Standard paket</option>
+        <option value="60">Premium paket</option>
+      </select>
+    </label>
+    <div id="calTitle"></div>
+    <div id="dow"></div>
+    <div id="calGrid"></div>
+    <div class="slotsBox" id="slots"></div>
+
+    <label>Telefon: <input id="phone" type="text" placeholder="+381..."></label>
+    <div class="summaryBox">
+      <div>Datum: <span id="sumDate">—</span></div>
+      <div>Vreme: <span id="sumTime">—</span></div>
+      <div>Paket: <span id="sumPkg">—</span></div>
     </div>
-  </nav>
-
-  <header id="home" class="hero">
-    <div class="hero__overlay"></div>
-    <div class="hero__content">
-      <span class="hero__badge">Beograd • Radno vreme: 17:00 – 22:00 • Nedelja je radna</span>
-      <h1>Mobilno pranje vozila na tvojoj adresi</h1>
-      <p>Izaberi paket, datum i vreme — pošalji zahtev za termin.</p>
-
-      <div class="hero__actions">
-        <a class="btn btn--primary" href="#booking">Zakaži termin</a>
-        <a class="btn btn--ghost" href="#prices">Pogledaj cene</a>
-      </div>
+    <div id="slotsMeta"></div>
+    <div>
+      <button id="sendReq" class="btn btn--primary">Pošalji zahtev</button>
+      <button id="reset" class="btn btn--ghost">Reset</button>
     </div>
-  </header>
+    <div id="statusLine"></div>
+  </div>
+</section>
 
-  <!-- CENE -->
-  <section id="prices" class="section">
-    <div class="section__head">
-      <h2>Cene</h2>
-      <p class="muted">Klikni na paket i odmah pređi na zakazivanje tog paketa.</p>
-    </div>
+<script>
+// --- tvoj JS helperi ( $, pad2, dateKey, niceDate, niceTime ...) ---
 
-    <div class="grid3">
-      <article class="card card--hover pkgCard" data-pkg="60">
-        <span class="pill">Basic • 60 min</span>
-        <h3>Basic</h3>
-        <div class="price">30€</div>
-        <ul class="list">
-          <li>Spoljašnje pranje</li>
-          <li>Felne i gume</li>
-          <li>Sušenje + brisanje</li>
-          <li>Stakla spolja + unutra</li>
-        </ul>
-      </article>
+// Blur / focus
+const focusOverlay = document.getElementById("focusOverlay");
+function enableFocus(){ document.body.classList.add("focus-active"); }
+function disableFocus(){ document.body.classList.remove("focus-active"); }
+focusOverlay?.addEventListener("click", disableFocus);
+window.addEventListener("scroll", disableFocus);
 
-      <article class="card card--hover pkgCard" data-pkg="90">
-        <span class="pill">Standard • 90 min</span>
-        <h3>Standard</h3>
-        <div class="price">70€</div>
-        <ul class="list">
-          <li>Spoljašnje pranje</li>
-          <li>Felne + gume</li>
-          <li>Sušenje + brisanje</li>
-          <li>Usisavanje enterijera</li>
-          <li>Plastike + detalji</li>
-          <li>Stakla unutra + spolja</li>
-        </ul>
-      </article>
+// EmailJS init
+emailjs.init("TVOJ_PUBLIC_KEY"); // stavi svoj key
 
-      <article class="card card--hover pkgCard" data-pkg="120">
-        <span class="pill">Premium • 120 min</span>
-        <h3>Premium</h3>
-        <div class="price">100€</div>
-        <ul class="list">
-          <li>Spoljašnje pranje</li>
-          <li>Felne + gume</li>
-          <li>Sušenje + brisanje</li>
-          <li>Usisavanje enterijera</li>
-          <li>Plastike + detalji</li>
-          <li>Pragovi/otvori + detalji</li>
-          <li>Finiš i osveženje</li>
-          <li>Dodatno po dogovoru</li>
-        </ul>
-      </article>
-    </div>
-  </section>
+// Sve ostalo: calendar, dropdown, slots, summary...
+// Kad klikne "Pošalji zahtev" šaljemo na email:
 
-  <!-- USLUGE (bez cena) -->
-  <section id="services" class="section section--alt">
-    <div class="section__head">
-      <h2>Usluge</h2>
-      <p class="muted">Šta sve pružamo (bez obzira na paket).</p>
-    </div>
+document.getElementById("sendReq").addEventListener("click", async ()=>{
+  const statusLine = document.getElementById("statusLine");
+  statusLine.textContent = "";
 
-    <div class="grid3">
-      <article class="card card--hover">
-        <span class="pill">Spolja</span>
-        <h3>Eksterijer</h3>
-        <ul class="list">
-          <li>Predpranje + aktivna pena</li>
-          <li>Ručno pranje (bez grebanja)</li>
-          <li>Felne + gume</li>
-          <li>Sušenje + final wipe</li>
-        </ul>
-      </article>
+  // validacija
+  const selectedDate = window.selected;
+  const selectedTime = window.selectedTime;
+  const phone = document.getElementById("phone").value.trim();
+  const pkg = document.getElementById("pkg");
+  const duration = parseInt(pkg.value,10);
+  const packageName = pkg.options[pkg.selectedIndex].text;
 
-      <article class="card card--hover">
-        <span class="pill">Unutra</span>
-        <h3>Enterijer</h3>
-        <ul class="list">
-          <li>Usisavanje (pod, sedišta, gepek)</li>
-          <li>Plastike + detalji</li>
-          <li>Stakla unutra</li>
-          <li>Osveženje kabine</li>
-        </ul>
-      </article>
+  if(!selectedDate || selectedTime==null){
+    statusLine.textContent = "Izaberi datum i vreme.";
+    return;
+  }
+  if(!phone.match(/^[0-9+\-\/\s()]+$/)){
+    statusLine.textContent = "Unesi ispravan kontakt telefon.";
+    return;
+  }
 
-      <article class="card card--hover">
-        <span class="pill">Detalji</span>
-        <h3>Detaljing</h3>
-        <ul class="list">
-          <li>Pragovi / ivice / otvori</li>
-          <li>Teže dostupna mesta</li>
-          <li>Finiš i “showroom” izgled</li>
-          <li>Dodatno po dogovoru</li>
-        </ul>
-      </article>
-    </div>
-  </section>
+  statusLine.textContent = "Slanje zahteva...";
 
-  <!-- GALERIJA -->
-  <section id="gallery" class="section">
-    <div class="section__head">
-      <h2>Galerija</h2>
-      <p class="muted">Primeri rada.</p>
-    </div>
+  try{
+    await emailjs.send("TVOJ_SERVICE_ID","TVOJ_TEMPLATE_ID",{
+      date: `${pad2(selectedDate.d)}/${pad2(selectedDate.m+1)}/${selectedDate.y}`,
+      time: `${Math.floor(selectedTime/60).toString().padStart(2,"0")}:${(selectedTime%60).toString().padStart(2,"0")}`,
+      package: packageName,
+      phone: phone
+    });
 
-    <div class="gallery">
-      <img src="https://images.pexels.com/photos/3354648/pexels-photo-3354648.jpeg" alt="Galerija 1">
-      <img src="https://images.pexels.com/photos/372810/pexels-photo-372810.jpeg" alt="Galerija 2">
-      <img src="https://images.pexels.com/photos/6873089/pexels-photo-6873089.jpeg" alt="Galerija 3">
-      <img src="https://images.pexels.com/photos/6873084/pexels-photo-6873084.jpeg" alt="Galerija 4">
-    </div>
-  </section>
+    statusLine.textContent = "✅ Zahtev poslat! Proveri svoj email.";
+    // reset booking
+    selected = null;
+    window.selectedTime = null;
+    document.getElementById("slots").innerHTML = "";
+    document.getElementById("sumDate").textContent = "—";
+    document.getElementById("sumTime").textContent = "—";
+    document.getElementById("sumPkg").textContent = "—";
+    document.getElementById("phone").value = "";
+    disableFocus();
+  }catch(e){
+    console.error(e);
+    statusLine.textContent = "Greška pri slanju. Pokušaj ponovo.";
+  }
+});
 
-  <!-- FAQ -->
-  <section id="faq" class="section section--alt">
-    <div class="section__head">
-      <h2>FAQ</h2>
-    </div>
+// Reset dugme
+document.getElementById("reset").addEventListener("click", ()=>{
+  selected = null;
+  window.selectedTime = null;
+  document.getElementById("slots").innerHTML = "";
+  document.getElementById("sumDate").textContent = "—";
+  document.getElementById("sumTime").textContent = "—";
+  document.getElementById("sumPkg").textContent = "—";
+  document.getElementById("phone").value = "";
+  document.getElementById("statusLine").textContent = "";
+  disableFocus();
+});
 
-    <div class="faq">
-      <button class="faq__q" data-faq>Da li dolazite na adresu? <span class="faq__icon">+</span></button>
-      <div class="faq__a">Da, dolazimo na vašu lokaciju u dogovorenom terminu.</div>
-
-      <button class="faq__q" data-faq>Koliko traje pranje? <span class="faq__icon">+</span></button>
-      <div class="faq__a">Basic 60 min, Standard 90 min, Premium 120 min.</div>
-
-      <button class="faq__q" data-faq>Da li radite nedeljom? <span class="faq__icon">+</span></button>
-      <div class="faq__a">Da — radno vreme je 17:00–22:00 (nedelja je radna).</div>
-
-      <button class="faq__q" data-faq>Da li moram unapred da platim? <span class="faq__icon">+</span></button>
-      <div class="faq__a">Ne. Zahtev se šalje, a potvrda termina ide naknadno.</div>
-
-      <button class="faq__q" data-faq>Šta mi je potrebno na lokaciji? <span class="faq__icon">+</span></button>
-      <div class="faq__a">Samo pristup vozilu i dogovor oko tačne adrese i vremena. Sve ostalo nosimo mi.</div>
-    </div>
-  </section>
-
-  <!-- BOOKING -->
-  <section id="booking" class="section">
-    <div class="section__head">
-      <h2>Zakazivanje termina</h2>
-      <p class="muted">Izaberi datum i klikni na slobodan termin.</p>
-    </div>
-
-    <div class="booking">
-      <!-- KALENDAR -->
-      <div class="panel">
-        <div class="calTop">
-          <button class="iconBtn" id="prevMonth" type="button">‹</button>
-          <div class="calTitle" id="calTitle">—</div>
-          <button class="iconBtn" id="nextMonth" type="button">›</button>
-        </div>
-
-        <div class="dow" id="dow"></div>
-        <div class="calGrid" id="calGrid"></div>
-        <div class="note" id="selectedInfo">Izaberi datum.</div>
-      </div>
-
-      <!-- DESNI PANEL -->
-      <div class="panel">
-        <div class="row">
-          <div>
-            <label class="label">Paket</label>
-
-            <select id="pkg" class="sr-only" aria-hidden="true" tabindex="-1">
-              <option value="60" selected>Basic (60 min)</option>
-              <option value="90">Standard (90 min)</option>
-              <option value="120">Premium (120 min)</option>
-            </select>
-
-            <div class="dd dd--big" id="pkgDD">
-              <button class="dd__btn" id="pkgBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                <span class="dd__value" id="pkgValue">Basic (60 min)</span>
-                <span class="dd__chev">▾</span>
-              </button>
-              <div class="dd__menu" id="pkgMenu" role="listbox" aria-label="Izaberi paket"></div>
-            </div>
-          </div>
-
-          <div>
-            <label class="label" for="phone">Kontakt telefon</label>
-            <input id="phone" class="input" placeholder="npr. 06x/xxx-xxxx" autocomplete="tel"/>
-            <div class="tiny muted">Telefon služi samo za potvrdu termina. Na sajtu ne prikazujemo nikakav naš broj.</div>
-          </div>
-        </div>
-
-        <div class="timeHead">
-          <label class="label">Vreme (17:00–22:00)</label>
-          <div class="tiny muted" id="slotsMeta">—</div>
-        </div>
-
-        <div class="slotsBox">
-          <div class="slots" id="slots">
-            <div class="muted">Izaberi datum da vidiš slobodne termine.</div>
-          </div>
-        </div>
-
-        <div class="summaryBox">
-          <div class="summaryLine"><span class="muted">Datum:</span> <b id="sumDate">—</b></div>
-          <div class="summaryLine"><span class="muted">Vreme:</span> <b id="sumTime">—</b></div>
-          <div class="summaryLine"><span class="muted">Paket:</span> <b id="sumPkg">—</b></div>
-        </div>
-
-        <div class="actions">
-          <button class="btn btn--primary" id="sendReq" disabled>Pošalji zahtev</button>
-          <button class="btn btn--ghost" id="reset" type="button">Reset</button>
-        </div>
-
-        <div class="tiny muted" id="statusLine"></div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="footer">© 2026 Mobilno Pranje</footer>
-
-  <script src="script.js?v=900"></script>
+</script>
 </body>
 </html>
