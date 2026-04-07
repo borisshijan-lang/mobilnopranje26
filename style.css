@@ -1,69 +1,75 @@
-/* --- Osnovni stilovi --- */
-body{
-  margin:0; padding:0; font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:#0b0b0f; color:#fff; scroll-behavior:smooth;
+/* RESET & FONT */
+* {margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body {line-height:1.5;background:#fff;color:#222;}
+a {text-decoration:none;color:inherit;}
+button {cursor:pointer;border:none;background:none;}
+
+/* BLUR OVERLAY */
+#focusOverlay {
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.3);backdrop-filter:blur(5px);
+  opacity:0;pointer-events:none;transition:opacity 0.3s ease;
+  z-index:1000;
 }
+#focusOverlay.active {opacity:1;pointer-events:auto;}
 
-.nav{
-  position:fixed; top:0; left:0; right:0; padding:1rem; background:rgba(0,0,0,.6);
-  z-index:1000; display:flex; gap:1rem;
-}
+/* NAVIGATION */
+.nav{position:sticky;top:0;background:#fff;z-index:999;box-shadow:0 1px 4px rgba(0,0,0,0.1);}
+.nav__inner{display:flex;justify-content:space-between;align-items:center;padding:0.8rem 1rem;}
+.nav__link{margin-left:1rem;padding:0.4rem 0.6rem;border-radius:4px;transition:background 0.3s;}
+.nav__link:hover,.nav__cta{background:#007bff;color:#fff;}
 
-.hero{
-  height:400px; display:flex; flex-direction:column; justify-content:center; align-items:center;
-  text-align:center;
-}
+/* HERO */
+.hero{position:relative;height:80vh;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;background:#222;}
+.hero__overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);}
+.hero__content{position:relative;z-index:2;}
+.hero__badge{background:#007bff;padding:0.3rem 0.6rem;border-radius:12px;font-size:0.9rem;}
 
-/* --- Booking panel --- */
-#booking{
-  position:relative; padding:2rem; max-width:600px; margin:2rem auto;
-}
-.panel{
-  background:rgba(10,10,15,.9); padding:2rem; border-radius:12px;
-  border:1px solid rgba(0,194,255,.25); box-shadow:0 30px 60px rgba(0,0,0,.5);
-  transition: all .25s ease;
-}
+/* SECTIONS */
+.section{padding:4rem 1rem;}
+.section--alt{background:#f8f8f8;}
+.section__head{text-align:center;margin-bottom:2rem;}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;}
 
-/* --- Blur overlay --- */
-#focusOverlay{
-  position:fixed; inset:0; background:rgba(0,0,0,.55);
-  opacity:0; pointer-events:none; transition:.25s ease; z-index:998;
-  backdrop-filter: blur(10px);
-}
+/* CARDS */
+.card{background:#fff;padding:1.2rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);transition:transform 0.2s,box-shadow 0.2s;}
+.card--hover:hover{transform:translateY(-4px);box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.pill{display:inline-block;background:#007bff;color:#fff;padding:0.2rem 0.6rem;border-radius:12px;font-size:0.8rem;margin-bottom:0.5rem;}
+.price{font-weight:600;font-size:1.2rem;margin:0.5rem 0;}
 
-.focus-active #focusOverlay{
-  opacity:1; pointer-events:auto;
-}
+/* GALLERY */
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;}
+.gallery img{width:100%;border-radius:8px;object-fit:cover;}
 
-.focus-active body > :not(#booking):not(#focusOverlay){
-  filter: blur(10px); opacity:.12; pointer-events:none;
-}
+/* FAQ */
+.faq__q{width:100%;text-align:left;padding:0.8rem 1rem;background:#eee;border-radius:6px;margin-bottom:0.3rem;font-weight:500;display:flex;justify-content:space-between;align-items:center;}
+.faq__a{padding:0.8rem 1rem;margin-bottom:0.5rem;display:none;background:#f9f9f9;border-radius:6px;}
+.faq__q.active+.faq__a{display:block;}
 
-.focus-active .nav{
-  opacity:0; pointer-events:none; transform:translateY(-12px); transition:.25s ease;
-}
+/* BOOKING */
+.booking{display:flex;flex-wrap:wrap;gap:1rem;}
+.panel{flex:1;min-width:280px;background:#fff;padding:1rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.row{display:flex;gap:1rem;flex-wrap:wrap;}
+.label{font-weight:600;margin-bottom:0.3rem;display:block;}
+.input{width:100%;padding:0.5rem;border:1px solid #ccc;border-radius:4px;}
+.tiny.muted{font-size:0.8rem;color:#666;}
+.dd{position:relative;}
+.dd__btn{width:100%;padding:0.5rem;border:1px solid #ccc;border-radius:4px;text-align:left;display:flex;justify-content:space-between;align-items:center;}
+.dd__menu{position:absolute;top:100%;left:0;width:100%;background:#fff;border:1px solid #ccc;border-radius:4px;max-height:200px;overflow-y:auto;display:none;z-index:10;}
+.dd__menu div{padding:0.5rem;cursor:pointer;}
+.dd__menu div:hover{background:#007bff;color:#fff;}
+.dd.active .dd__menu{display:block;}
+.slotsBox{margin-top:1rem;}
+.slots div{padding:0.5rem 0.6rem;margin-bottom:0.3rem;border:1px solid #ccc;border-radius:4px;cursor:pointer;transition:background 0.2s;}
+.slots div:hover{background:#007bff;color:#fff;}
+.slots div.selected{background:#007bff;color:#fff;font-weight:600;}
+.summaryBox{margin-top:1rem;background:#f8f8f8;padding:0.8rem;border-radius:6px;}
+.summaryLine{margin-bottom:0.4rem;}
+.actions{display:flex;gap:1rem;margin-top:1rem;}
+.btn{padding:0.5rem 1rem;border-radius:4px;font-weight:600;transition:background 0.3s;}
+.btn--primary{background:#007bff;color:#fff;}
+.btn--ghost{background:#eee;color:#333;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
 
-.focus-active #booking{ position:relative; z-index:999; pointer-events:auto; }
-.focus-active .panel{
-  transform: scale(1.03);
-  border-color: rgba(0,194,255,.55);
-  box-shadow: 0 40px 110px rgba(0,0,0,.65), 0 0 0 1px rgba(0,194,255,.35);
-}
-
-/* --- Calendar --- */
-.calendar-title{text-align:center; font-weight:600; margin:1rem 0;}
-.calendar-dow, .calendar-grid{display:grid; grid-template-columns:repeat(7,1fr); text-align:center;}
-.day{padding:0.75rem; cursor:pointer; border-radius:6px; margin:2px;}
-.day--selected{background:#00c2ff; color:#000;}
-.day--disabled{color:#777; cursor:not-allowed;}
-.day--empty{visibility:hidden;}
-
-/* --- Slots --- */
-.slot{padding:0.5rem 1rem; margin:3px; border-radius:6px; cursor:pointer;}
-.slot--disabled{background:#222; cursor:not-allowed;}
-.slot--selected{background:#6ee7ff; color:#000;}
-
-/* --- Buttons --- */
-.btn{padding:.5rem 1rem; border:none; border-radius:6px; cursor:pointer;}
-.btn--primary{background:#00c2ff; color:#000;}
-.btn--ghost{background:#222; color:#fff; margin-left:1rem;}
+/* FOOTER */
+.footer{text-align:center;padding:2rem 1rem;font-size:0.9rem;color:#666;}
