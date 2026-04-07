@@ -3,68 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Booking</title>
+<title>Booking sistem</title>
 
 <!-- EmailJS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
-<style>
-/* --- Tvoj CSS od root do .focus-active --- */
-:root{
-  --bg:#0b0b0f; --muted:#b9b9c7; --text:#ffffff;
-  --line:rgba(255,255,255,.08); --accent:#00c2ff; --accent2:#6ee7ff;
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial}
-body{
-  background:
-    radial-gradient(1200px 600px at 20% -10%, rgba(0,194,255,.18), transparent 60%),
-    radial-gradient(1000px 500px at 90% 10%, rgba(110,231,255,.10), transparent 55%),
-    var(--bg);
-  color:var(--text); scroll-behavior:smooth;
-}
-body::before{
-  content:""; position:fixed; inset:0; z-index:-2;
-  background:url("https://images.unsplash.com/photo-1607330289024-1535c6b4e1c8?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat;
-  opacity:.18; filter:saturate(1.05) contrast(1.05);
-}
-
-/* NAV, HERO, Section, Grid, Card... (stari CSS) */
-/* --- kopiraj ceo tvoj CSS iz prethodnog primera --- */
-
-/* Focus/Blur booking */
-#focusOverlay{
-  position:fixed; inset:0; background:rgba(0,0,0,.55);
-  opacity:0; pointer-events:none; transition:.25s ease; z-index:998;
-  backdrop-filter: blur(10px);
-}
-.focus-active #focusOverlay{
-  opacity:1; pointer-events:auto;
-}
-.focus-active body > :not(#booking):not(#focusOverlay){
-  filter: blur(10px); opacity:.12; pointer-events:none;
-}
-.focus-active .nav{
-  opacity:0; pointer-events:none;
-  transform:translateY(-12px); transition:.25s ease;
-}
-.focus-active #booking{ position:relative; z-index:999; pointer-events:auto; }
-.focus-active #booking .panel{
-  transform: scale(1.03);
-  border-color: rgba(0,194,255,.55);
-  box-shadow: 0 40px 110px rgba(0,0,0,.65), 0 0 0 1px rgba(0,194,255,.35);
-}
-</style>
+<!-- Linkovanje CSS-a direktno ili internal -->
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="nav"> <!-- tvoj nav --> </div>
-<div class="hero"> <!-- hero content --> </div>
+<div class="nav"> <!-- tvoj nav meni -->
+  <a href="#booking">Zakazi termin</a>
+</div>
 
+<div class="hero">
+  <h1>Dobrodošli!</h1>
+  <p>Izaberi paket i termin.</p>
+</div>
+
+<!-- Booking sekcija -->
 <section id="booking" class="section">
   <div id="focusOverlay"></div>
   <div class="panel">
     <h2>Zakazi termin</h2>
+
     <label>Izaberi paket:
       <select id="pkg">
         <option value="30" selected>Mini paket</option>
@@ -72,102 +35,35 @@ body::before{
         <option value="60">Premium paket</option>
       </select>
     </label>
-    <div id="calTitle"></div>
-    <div id="dow"></div>
-    <div id="calGrid"></div>
-    <div class="slotsBox" id="slots"></div>
+
+    <div id="calTitle" class="calendar-title"></div>
+    <div id="dow" class="calendar-dow"></div>
+    <div id="calGrid" class="calendar-grid"></div>
+
+    <div id="slots" class="slotsBox">
+      Izaberi datum da vidiš slobodne termine.
+    </div>
 
     <label>Telefon: <input id="phone" type="text" placeholder="+381..."></label>
+
     <div class="summaryBox">
       <div>Datum: <span id="sumDate">—</span></div>
       <div>Vreme: <span id="sumTime">—</span></div>
       <div>Paket: <span id="sumPkg">—</span></div>
     </div>
-    <div id="slotsMeta"></div>
-    <div>
+
+    <div id="slotsMeta">—</div>
+
+    <div class="buttons">
       <button id="sendReq" class="btn btn--primary">Pošalji zahtev</button>
       <button id="reset" class="btn btn--ghost">Reset</button>
     </div>
+
     <div id="statusLine"></div>
   </div>
 </section>
 
-<script>
-// --- tvoj JS helperi ( $, pad2, dateKey, niceDate, niceTime ...) ---
-
-// Blur / focus
-const focusOverlay = document.getElementById("focusOverlay");
-function enableFocus(){ document.body.classList.add("focus-active"); }
-function disableFocus(){ document.body.classList.remove("focus-active"); }
-focusOverlay?.addEventListener("click", disableFocus);
-window.addEventListener("scroll", disableFocus);
-
-// EmailJS init
-emailjs.init("TVOJ_PUBLIC_KEY"); // stavi svoj key
-
-// Sve ostalo: calendar, dropdown, slots, summary...
-// Kad klikne "Pošalji zahtev" šaljemo na email:
-
-document.getElementById("sendReq").addEventListener("click", async ()=>{
-  const statusLine = document.getElementById("statusLine");
-  statusLine.textContent = "";
-
-  // validacija
-  const selectedDate = window.selected;
-  const selectedTime = window.selectedTime;
-  const phone = document.getElementById("phone").value.trim();
-  const pkg = document.getElementById("pkg");
-  const duration = parseInt(pkg.value,10);
-  const packageName = pkg.options[pkg.selectedIndex].text;
-
-  if(!selectedDate || selectedTime==null){
-    statusLine.textContent = "Izaberi datum i vreme.";
-    return;
-  }
-  if(!phone.match(/^[0-9+\-\/\s()]+$/)){
-    statusLine.textContent = "Unesi ispravan kontakt telefon.";
-    return;
-  }
-
-  statusLine.textContent = "Slanje zahteva...";
-
-  try{
-    await emailjs.send("TVOJ_SERVICE_ID","TVOJ_TEMPLATE_ID",{
-      date: `${pad2(selectedDate.d)}/${pad2(selectedDate.m+1)}/${selectedDate.y}`,
-      time: `${Math.floor(selectedTime/60).toString().padStart(2,"0")}:${(selectedTime%60).toString().padStart(2,"0")}`,
-      package: packageName,
-      phone: phone
-    });
-
-    statusLine.textContent = "✅ Zahtev poslat! Proveri svoj email.";
-    // reset booking
-    selected = null;
-    window.selectedTime = null;
-    document.getElementById("slots").innerHTML = "";
-    document.getElementById("sumDate").textContent = "—";
-    document.getElementById("sumTime").textContent = "—";
-    document.getElementById("sumPkg").textContent = "—";
-    document.getElementById("phone").value = "";
-    disableFocus();
-  }catch(e){
-    console.error(e);
-    statusLine.textContent = "Greška pri slanju. Pokušaj ponovo.";
-  }
-});
-
-// Reset dugme
-document.getElementById("reset").addEventListener("click", ()=>{
-  selected = null;
-  window.selectedTime = null;
-  document.getElementById("slots").innerHTML = "";
-  document.getElementById("sumDate").textContent = "—";
-  document.getElementById("sumTime").textContent = "—";
-  document.getElementById("sumPkg").textContent = "—";
-  document.getElementById("phone").value = "";
-  document.getElementById("statusLine").textContent = "";
-  disableFocus();
-});
-
-</script>
+<!-- JS skripta -->
+<script src="booking.js"></script>
 </body>
 </html>
